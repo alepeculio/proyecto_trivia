@@ -19,7 +19,8 @@ var PreguntasRespondidasSchema = new Schema( {
 	},
 	tiempo: {
 		type: Number,
-		required: true
+		required: true,
+		default: Date.now
 	},
 	fecha: {
 		type: Date,

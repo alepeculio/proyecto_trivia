@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Preguntas</title>
+</head>
+<body>
+
+	<form action="/preguntas/generarPreguntaDiaria" method="post">
+		<input type="text" name="ID_Usuario" placeholder="ID_Usuario" required>
+		<input type="text" name="categoria" placeholder="Categoria" required>
+		<input type="number" name="posicion" min="1" max="12" placeholder="Posicion" required>
+		<button>Generar pregunta diaria</button>
+	</form>
+
+	<form action="/preguntas/usuarioRespondio" method="post">
+		<input type="text" name="ID_Usuario" placeholder="ID_Usuario" required>
+		<input type="text" name="ID_Pregunta" placeholder="ID_Pregunta" required>
+		<input type="text" name="estado" placeholder="Estado" required>
+		<input type="number" step=".001" min="0" name="tiempo" placeholder="Tiempo" required>
+		<button>Responder</button>
+	</form>
+
+</body>
+</html>

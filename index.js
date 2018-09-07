@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 
 const usuario = require('./routes/usuario.route');
+const preguntas = require('./routes/preguntas.route');
 const app = express();
 
 
@@ -17,6 +18,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:false}));
 
 app.use('/usuarios', usuario);
+app.use( '/preguntas', preguntas );
 
 let port = 1234;
 //Para usar un template
