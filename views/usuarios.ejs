@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Usuarios</title>
+</head>
+<body>
+	<h1>Usuarios</h1>
+	<form action="/usuarios/crear" method="post" enctype="multipart/form-data">
+		<input required type="email" name="correo" placeholder="Correo">
+		<input required type="text" name="nombre" placeholder="Nombre">
+		<input required type="text" name="apellido" placeholder="Apellido">
+		<input required type="password" name="pass" placeholder="Contraseña">
+		<input type="file" name="img" placeholder="Imagen">
+		<input required type="text" name="tipo" placeholder="Tipo">
+		<input required type="number" name="mmrestantes" placeholder="Mano a mano restantes">
+		<input required type="number" name="puntaje" placeholder="Puntaje">
+		<button>Crear usuario</button>
+	</form>
+
+	<form action="/usuarios/actualizar" method="post">
+		<input required type="email" name="correo" placeholder="Correo">
+		<input required type="text" name="nombre" placeholder="Nombre">
+		<input required type="text" name="apellido" placeholder="Apellido">
+		<input required type="password" name="pass" placeholder="Contraseña">
+		<input required type="text" name="tipo" placeholder="Tipo">
+		<input required type="number" name="mmrestantes" placeholder="Mano a mano restantes">
+		<input required type="number" name="puntaje" placeholder="Puntaje">
+		<button>Actualizar usuario</button>
+	</form>
+
+	<form action="/usuarios/obtener" method="get">
+		<input type="email" name="correo" placeholder="Correo" required>
+		<button>Obtener usuario</button>
+	</form>
+
+	<form action="/usuarios/eliminar" method="post">
+		<input type="email" name="correo" placeholder="Correo" required>
+		<button>Eliminar usuario</button>
+	</form>
+</body>
+</html>
