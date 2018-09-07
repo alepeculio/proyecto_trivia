@@ -125,7 +125,7 @@ exports.eliminar = (req, res) => {
 }
 
 exports.listar = (req, res) => {
-	Usuario.find()
+	Usuario.find({}, null, {sort:{puntaje: -1}})
 	.then(users => {
 		res.statusCode = 200;
 		res.setHeader('Content-Type','application/json');
