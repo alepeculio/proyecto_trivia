@@ -1,22 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Usuarios</title>
+	<meta charset="utf-8">
+	<link rel="stylesheet" type="text/css" href="/css/usuarios.css">
+	<title>Title</title>
 </head>
+<header>
+	<span class="header-puntuacion">Puntuación: 200pt</span>
+	<img src="img/user_default.png">
+	<div class="opciones">
+		<span class="header-nombre">Alejandro Peculio</span>
+		<ul>
+			<li>Cerrar sesión</li>
+		</ul>
+	</div>
+</header>
 <body>
-	<h1>Usuarios</h1>
-	<form action="/usuarios/crear" method="post" enctype="multipart/form-data">
-		<input required type="email" name="correo" placeholder="Correo">
-		<input required type="text" name="nombre" placeholder="Nombre">
-		<input required type="text" name="apellido" placeholder="Apellido">
-		<input required type="password" name="pass" placeholder="Contraseña">
-		<input type="file" name="img" placeholder="Imagen">
-		<input required type="text" name="tipo" placeholder="Tipo">
-		<input required type="number" name="mmrestantes" placeholder="Mano a mano restantes">
-		<input required type="number" name="puntaje" placeholder="Puntaje">
-		<button>Crear usuario</button>
-	</form>
+	<div>
+		<div>
+			<h3>Registrarse</h3>
+			<form action="/usuarios/registro" method="post" enctype="multipart/form-data">
+				<input required type="email" name="correo" placeholder="Correo">
+				<input required type="text" name="nombre" placeholder="Nombre">
+				<input required type="text" name="apellido" placeholder="Apellido">
+				<input required type="password" name="pass" placeholder="Contraseña">
+				<input type="file" name="img" placeholder="Imagen">
+				<button>Registrarse</button>
+			</form>
+		</div>
+		<img src="img/trivia.jpg">
+	</div>
 
+	<!--
 	<form action="/usuarios/actualizar" method="post">
 		<input required type="email" name="correo" placeholder="Correo">
 		<input required type="text" name="nombre" placeholder="Nombre">
@@ -36,6 +51,6 @@
 	<form action="/usuarios/eliminar" method="post">
 		<input type="email" name="correo" placeholder="Correo" required>
 		<button>Eliminar usuario</button>
-	</form>
+	</form>-->
 </body>
 </html>

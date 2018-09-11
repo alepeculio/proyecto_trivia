@@ -7,7 +7,11 @@ exports.inicio = (req, res) => {
 	res.render('usuarios.ejs');
 }
 
-exports.crear = (req, res) => {
+exports.registro = (req, res) => {
+	crearUsuario(req,res, 'SinSuscripcion', 3, 0);
+}
+
+function crearUsuario(req, res, tipo, mmrestantes, puntaje){
 	var form = new multiparty.Form(); //Para el manejo de datos de formularios 'multipart/form-data'
 
 	form.parse(req, function(err, fields, files) {
@@ -17,9 +21,9 @@ exports.crear = (req, res) => {
 			nombre: fields.nombre[0],
 			apellido: fields.apellido[0],
 			pass: fields.pass[0],
-			tipo: fields.tipo[0],
-			mmrestantes: fields.mmrestantes[0],
-			puntaje: fields.puntaje[0]
+			tipo: (tipo != undefined) ? tipo : fields.tipo[0],
+			mmrestantes: (mmrestantes != undefined) ? mmrestantes : fields.mmrestantes[0],
+			puntaje: (puntaje != undefined) ? puntaje : fields.puntaje[0]
 		});
 
 		if(files.img[0].originalFilename != ''){
@@ -49,7 +53,7 @@ exports.crear = (req, res) => {
 		}else{
 			usuario.save()
 			.then((u) => {
-				res.send('Usuario agregado - sin imagen');
+				res.send('Usuario agregado - sin imagen'); //Cambiar mensaje por pagina a la que redirigir.
 			})
 			.catch((err) => {
 				console.log(err);
