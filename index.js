@@ -7,7 +7,7 @@ const app = express();
 
 
 var mongoose = require('mongoose');
-var deb_db_url = 'mongodb://ale:ale12345@ds127362.mlab.com:27362/testing_mlab';
+var deb_db_url = 'mongodb://triviauser:user1234@ds149742.mlab.com:49742/triviatip';
 var mongoDB = deb_db_url;
 mongoose.connect(mongoDB, {useNewUrlParser: true});
 mongoose.Promise = global.Promise;
