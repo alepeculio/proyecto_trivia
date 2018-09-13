@@ -25,7 +25,8 @@ let port = 1234;
 //npm install --save ejs
 app.set('view engine', 'ejs');
 
-//app.use('/css', express.static(__dirname + '/views/css'));
+app.use('/css', express.static(__dirname + '/views/css'));
+app.use('/img', express.static(__dirname + '/views/img'));
 
 app.listen(port, () => {
 	console.log('Servidor iniciado');
