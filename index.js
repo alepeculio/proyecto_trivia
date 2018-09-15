@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+var cors = require('cors');
 
 const usuario = require('./routes/usuario.route');
 const preguntas = require('./routes/preguntas.route');
@@ -16,6 +17,7 @@ db.on('error', console.error.bind(console, 'MongoDB connection error'));
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:false}));
+app.use(cors());
 
 app.use('/usuarios', usuario);
 app.use( '/preguntas', preguntas );
@@ -27,6 +29,7 @@ app.set('view engine', 'ejs');
 
 app.use('/css', express.static(__dirname + '/views/css'));
 app.use('/img', express.static(__dirname + '/views/img'));
+
 
 app.listen(port, () => {
 	console.log('Servidor iniciado');

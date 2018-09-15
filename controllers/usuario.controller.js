@@ -25,7 +25,7 @@ function crearUsuario(req, res, tipo, mmrestantes, puntaje){
 			mmrestantes: (mmrestantes != undefined) ? mmrestantes : fields.mmrestantes[0],
 			puntaje: (puntaje != undefined) ? puntaje : fields.puntaje[0]
 		});
-
+	
 		if(files.img[0].originalFilename != ''){
 			var filename = files.img[0].originalFilename.split('.');
 			var contentType = filename[filename.length - 1]; //Extención del archivo.
@@ -42,22 +42,23 @@ function crearUsuario(req, res, tipo, mmrestantes, puntaje){
 
 				usuario.save()
 				.then((u) => {
-					res.send('Usuario agregado - con imagen'); //Cambiar mensaje por pagina a la que redirigir.
+					res.json({Mensaje: 'Usuario agregado con éxito.'});
 				})
 				.catch((err) => {
 					console.log(err);
-					res.send('error:'+err.message);
+					res.json({Error: 'No se pudo agregar el usuario debido al siguiente error: '+err.message});
 				});
 
 			});
 		}else{
 			usuario.save()
 			.then((u) => {
-				res.send('Usuario agregado - sin imagen'); //Cambiar mensaje por pagina a la que redirigir.
+				res.json({Mensaje: 'Usuario agregado con éxito.'});
+
 			})
 			.catch((err) => {
 				console.log(err);
-				res.send('error:'+err.message);
+				res.json({Error: 'No se pudo agregar el usuario debido al siguiente error: '+err.message});
 			});
 		}
 	});
@@ -68,10 +69,8 @@ exports.obtener = (req, res) => { //Retorna un objeto json con los datos del usu
 
 	Usuario.find({correo: correo})
 	.then((usuarios) => {
-		res.statusCode = 200;
-		res.setHeader('Content-Type','application/json');
 		if(usuarios.length == 0){
-			res.write(JSON.stringify({Mensaje: 'El usuario solicitado no existe.'}))
+			res.json({Mensaje: 'El usuario solicitado no existe.'});
 		}else{
 			var u = usuarios[0];
 			var imgBase64 = (u.img.data != undefined) ? 'data:image/jpeg;base64,'+u.img.data.toString('base64') : ''; //Pasar a base64, para usarla directamente en el img src.
@@ -86,9 +85,10 @@ exports.obtener = (req, res) => { //Retorna un objeto json con los datos del usu
 				puntaje: u.puntaje,
 				img: imgBase64
 			}
-			res.write(JSON.stringify(usuario));
+			res.json(usuario);
 		}
-		res.end()
+	}).catch((err) => {
+		res.json({Error: 'No se pudo obtener el usuario debido al siguiente error: '+err.message});
 	});
 }
 
@@ -107,12 +107,33 @@ exports.actualizar = (req, res) => {
 	Usuario.findOneAndUpdate(query,update, (err, usuario) => {
 		if(err){
 			console.log(err);
-			res.send('Hubo un error al actualizar el usuario');
+			res.json({Error: 'No se pudo actualizar el usuario debido al siguiente error: '+err.message});
 			return;
 		}
-
-		res.send('Usuario actualizado correctamente');
+		res.json({Mensaje: 'Usuario actualizado correctamente'});
 	});
+}
+
+exports.actualizarSuscripcion = (req, res) => {
+	let query = { correo: req.body.correo };
+
+	let update = {
+		tipo: req.body.tipo
+	}
+
+	res.statusCode = 200;
+	res.setHeader('Content-Type','application/json');
+
+	Usuario.findOneAndUpdate(query,update)
+	.then( usuario => {
+		res.write(JSON.stringify({Mensaje: 'Suscripción actualizada correctamente'}));
+		res.end();
+	}).catch( err => {
+		console.log(err);
+		res.write(JSON.stringify({Error: 'No se pudo actualizar la suscripción debido al siguiente error: '+err.message}));
+		res.end();
+	});
+
 }
 
 exports.eliminar = (req, res) => {
@@ -120,21 +141,19 @@ exports.eliminar = (req, res) => {
 
 	Usuario.findOneAndDelete(query)
 	.then((usuario) => {
-		res.send('Usuario eliminado');
+		res.json({Mensaje: 'Usuario eliminado'});
 	})
 	.catch((err) => {
 		console.log(err);
-		res.send('Hubo un error al borrar el usuario');
+		res.json({Error: 'No se pudo eliminar el usuario debido al siguiente error: '+err.message});
 	});
 }
 
 exports.listar = (req, res) => {
 	Usuario.find({}, null, {sort:{puntaje: -1}})
 	.then(users => {
-		res.statusCode = 200;
-		res.setHeader('Content-Type','application/json');
 		if(users.length == 0){
-			res.write(JSON.stringify({Mensaje: 'No hay usuarios'}));
+			res.json({Mensaje: 'No hay usuarios'});
 		}else{
 			let usuarios = [];
 			for(u of users){
@@ -152,12 +171,11 @@ exports.listar = (req, res) => {
 				}
 				usuarios.push(usuario);
 			}
-			res.write(JSON.stringify({usuarios :usuarios}));
+			res.json({usuarios :usuarios});
 		}
-		res.end();
-
 	})
 	.catch(err => {
 		console.log(err);
+		res.json({Error: 'No se pudieron listar los usuarios debido al siguiente error: '+err.message});
 	});
 }

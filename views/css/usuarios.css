@@ -41,13 +41,19 @@ input{
 }
 
 button{
-	border: 1px solid black;
 	padding: 10px;
 	margin-top: 10px;
 	font-weight: bold;
 	color: white;
 	background-color: #0000ff80;
 	cursor: pointer;
+	transition-property: padding;
+	transition-duration: .2s;
+}
+
+button:hover {
+	padding: 11.5px;
+	background-color:#1449a5e6; 
 }
 
 header{
@@ -103,6 +109,7 @@ header button:hover{
  width: 113px;
  height: 43px;
  background-color: rgba(219, 160, 19, 0.72);
+ padding: 0;
 }
 
 
