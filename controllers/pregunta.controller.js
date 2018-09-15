@@ -151,7 +151,7 @@ exports.pregunta_create = function(req,res){
 			console.log(err);
 		};
 		if(!data){
-		res.send('La categoria no existe')
+			res.send('La categoria no existe')
 		}else{
 			var respuestas = [req.body.correcta,req.body.primera,req.body.segunda,req.body.tercera];
 			var pregunta = new Pregunta({
@@ -163,7 +163,7 @@ exports.pregunta_create = function(req,res){
 			});
 			pregunta.save(function(err){
 				if(err){return console.log(err);}
-			res.send('Pregunta creado ok')
+				res.send('Pregunta creado ok')
 			//res.render('respuesta.ejs',{producto: product,marca: data })
 		})
 		}
@@ -174,4 +174,8 @@ exports.pregunta_create = function(req,res){
 };
 exports.pregunta_new = function(req,res){
 	res.sendFile('/views/test.html',{root: '.'})
+};
+
+exports.pregunta = function(req,res){
+	
 };
