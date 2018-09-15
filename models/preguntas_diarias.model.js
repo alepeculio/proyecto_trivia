@@ -15,6 +15,10 @@ var PreguntasDiariasSchema = new Schema( {
 	position: {
 		type: Number,
 		required: true
+	},
+	fecha: {
+		type: String,
+		required: true
 	}
 } );
 
