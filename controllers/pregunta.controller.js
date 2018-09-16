@@ -69,21 +69,48 @@ exports.preguntasDiarias = ( req, res ) => {
 	PreguntasDiarias.find( { ID_usuario: id_usu, fecha: fechaActual() } ).populate( {
 		path: 'ID_pregunta',
 		populate: { path: 'categoria' }
-	} ).exec( ( err, preguntas ) => {
+	} ).sort( 'position' ).exec( ( err, diarias ) => {
 		if ( err ) {
 			error( res, err );
 		} else {
-			let respuestas = [];
+			// Obtener las id de las preguntas diarias de hoy
+			let ids = [];
+			for ( let i = 0; i < diarias.length; i++ )
+				ids.push( diarias[i].ID_pregunta._id );
 
-			for ( let i = 0; i < preguntas.length; i++ )
-				respuestas.push( {
-					categoria: preguntas[i].ID_pregunta.categoria.name,
-					posicion: preguntas[i].position
-				} );
+			// Buscar si fueron respondidas por ese usuario
+			PreguntasRespondidas.find( { ID_usuario: id_usu, ID_pregunta: { $in: ids } }, ( err, respondidas ) => {
+				if ( err ) {
+					error( res, err );
+				} else {
+					// Se va a devolver una lista con la posicion de la pregunta diaria y su estado
+					let resultado = [];
 
-			res.send( {
-				asd: respuestas,
-				dsa: preguntas
+					// Recorremos cada pregunta diaria
+					for ( let i = 0; i < diarias.length; i++ ) {
+						// Colocamos el estado inicial como 'Respondiendo...' por si no la encontramos en la lista de ya respondidas
+						let estado = 'Respondiendo...';
+						
+						// Recorremos las respondidas
+						for ( let j = 0; j < respondidas.length; j++ )
+							// Si encontramos esa pregunta entre las respondidas
+							if ( diarias[i].ID_pregunta._id.equals( respondidas[j].ID_pregunta ) ) {
+								// Guardamos su estado
+								estado = respondidas[j].estado;
+								// La quitamos de la lista para no recorrer tanto la siguiente vez
+								respondidas.splice( j, 1 );
+								break;
+							}
+
+						// Se agrega el resultado
+						resultado.push( {
+							posicion: diarias[i].position,
+							estado: estado
+						} );
+					}
+
+					res.send( resultado );
+				}
 			} );
 		}
 	} );
@@ -152,12 +179,7 @@ exports.generarPreguntaDiaria = ( req, res ) => {
 								if ( err ) {
 									error( res, err );
 								} else {
-									// TODO: No retornar la nueva pregunta (Solo para testing)
-									let r = {
-										nueva: pregs[p],
-										coleccion: pregs
-									};
-									res.send( r );
+									res.send( pregs[p] );
 								}
 							} );
 						}
