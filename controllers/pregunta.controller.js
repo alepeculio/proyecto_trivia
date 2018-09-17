@@ -57,75 +57,156 @@ exports.preguntas = ( req, res ) => {
 	res.render( 'preguntas.ejs' );
 };
 
-exports.generarPreguntaDiaria = ( req, res ) => {
-	Pregunta.find().populate( 'categoria' ).exec( ( err, pregs ) => {
+exports.preguntasDiarias = ( req, res ) => {
+	let id_usu = req.query.ID_Usuario;
+
+	if ( id_usu === undefined ) {
+		error( res, 'Faltan parametros' );
+		return;
+	}
+
+	// Buscar las preguntas diarias del usuario en la fecha actual
+	PreguntasDiarias.find( { ID_usuario: id_usu, fecha: fechaActual() } ).populate( {
+		path: 'ID_pregunta',
+		populate: { path: 'categoria' }
+	} ).sort( 'position' ).exec( ( err, diarias ) => {
 		if ( err ) {
-			console.log( 'Error: ' + err );
+			error( res, err );
 		} else {
-			res.send( pregs );
-			/*PreguntasRespondidas.find( { ID_usuario: req.body.ID_Usuario }, ( err, pregsResp ) => {
+			// Obtener las id de las preguntas diarias de hoy
+			let ids = [];
+			for ( let i = 0; i < diarias.length; i++ )
+				ids.push( diarias[i].ID_pregunta._id );
+
+			// Buscar si fueron respondidas por ese usuario
+			PreguntasRespondidas.find( { ID_usuario: id_usu, ID_pregunta: { $in: ids } }, ( err, respondidas ) => {
 				if ( err ) {
-					console.log( 'Error: ' + err );
+					error( res, err );
 				} else {
-					res.send( pregsResp );
+					// Se va a devolver una lista con la posicion de la pregunta diaria y su estado
+					let resultado = [];
+
+					// Recorremos cada pregunta diaria
+					for ( let i = 0; i < diarias.length; i++ ) {
+						// Colocamos el estado inicial como 'Respondiendo...' por si no la encontramos en la lista de ya respondidas
+						let estado = 'Respondiendo...';
+						
+						// Recorremos las respondidas
+						for ( let j = 0; j < respondidas.length; j++ )
+							// Si encontramos esa pregunta entre las respondidas
+							if ( diarias[i].ID_pregunta._id.equals( respondidas[j].ID_pregunta ) ) {
+								// Guardamos su estado
+								estado = respondidas[j].estado;
+								// La quitamos de la lista para no recorrer tanto la siguiente vez
+								respondidas.splice( j, 1 );
+								break;
+							}
+
+						// Se agrega el resultado
+						resultado.push( {
+							posicion: diarias[i].position,
+							estado: estado
+						} );
+					}
+
+					res.send( resultado );
 				}
-			} );*/
+			} );
 		}
 	} );
-	/* Categoria.findOne( { name: req.body.categoria }, ( err, cat ) => {
+};
+
+exports.generarPreguntaDiaria = ( req, res ) => {
+	let id_usu = req.body.ID_Usuario;
+	let cat = req.body.categoria;
+	let position = req.body.posicion;
+
+	if ( id_usu === undefined || cat === undefined || position === undefined ) {
+		error( res, 'Faltan parametros' );
+		return;
+	}
+
+	// Obtener todas las preguntas junto con sus categorias
+	Pregunta.find( {} ).populate( 'categoria' ).exec( ( err, pregs ) => {
 		if ( err ) {
-			res.send( 'Error: ' + err.message );
+			error( res, err );
 		} else {
-			Pregunta.find( { categoria: cat._id }, ( err, pregs ) => {
+
+			// Eliminar las preguntas que no sean de la categoria dada
+			for ( let i = pregs.length - 1; i >= 0; i-- )
+				if ( pregs[i].categoria.name !== cat )
+					pregs.splice( i, 1 );
+
+			// Obtener todas las preguntas respondidas por ese usuario
+			PreguntasRespondidas.find( { ID_usuario: id_usu }, ( err, pregsResp ) => {
 				if ( err ) {
-					res.send( 'Error: ' + err.message );
+					error( res, err );
 				} else {
-					PreguntasRespondidas.find( { ID_usuario: req.body.ID_Usuario }, ( err, pregsResp ) => {
+					// Eliminar las preguntas que ya fueron respondidas por ese usaurio
+					for ( let i = pregs.length - 1; i >= 0; i-- )
+						for ( let j = pregsResp.length - 1; j >= 0; j-- )
+							if ( pregs[i]._id.equals( pregsResp[j].ID_pregunta ) ) {
+								pregs.splice( i, 1 );
+								break;
+							}
+
+					// Obtener todas las preguntas diarias del usuario
+					PreguntasDiarias.find( { ID_usuario: id_usu }, ( err, pregsDiarias ) => {
 						if ( err ) {
-							res.send( 'Error: ' + err.message );
+							error( res, err );
 						} else {
-							for ( let i = 0; i < pregs.length; i++ ) {
-								for ( let j = 0; j < pregsResp.length; j++ ) {
-									if ( pregs[i]._id === pregsResp[j].ID_pregunta ) {
+							// Eliminar las preguntas que estan en diarias
+							for ( let i = pregs.length - 1; i >= 0; i-- )
+								for ( let j = pregsDiarias.length - 1; j >= 0; j-- )
+									if ( pregs[i]._id.equals( pregsDiarias[j].ID_pregunta ) ) {
 										pregs.splice( i, 1 );
 										break;
 									}
+
+							// Seleccionar una posicion aleatoria
+							let p = Math.floor( Math.random() * pregs.length );
+
+							// Crear la pregunta ( No va a haber sido respondida por el usuario ni va a estar en sus preguntas diarias )
+							let nuevaDiaria = PreguntasDiarias( {
+								ID_usuario: id_usu,
+								ID_pregunta: pregs[p]._id,
+								position: position,
+								fecha: fechaActual()
+							} );
+
+							// Guardar y retornar
+							nuevaDiaria.save( ( err ) => {
+								if ( err ) {
+									error( res, err );
+								} else {
+									res.send( pregs[p] );
 								}
-							}
-							let preguntaDiaria = new PreguntasDiarias({
-								ID_usuario: req.body.ID_Usuario,
-								ID_pregunta: pregs[0]._id,
-								position: req.body.posicion
-							});
-							preguntaDiaria.save().then(( r ) => {
-								res.send( {
-									r: r,
-									pregs: pregs
-								} );
-							}).catch(( err ) => {
-								res.send( 'Error: ' + err.message );
-							});
+							} );
 						}
 					} );
 				}
 			} );
 		}
-	} );*/
+	} );
 };
 
-exports.usuarioRespondio = ( req, res ) => {
-	let fecha = new Date();
-	fecha.setUTCHours( 0, 0, 0, 0 );
+function fechaActual() {
+	let hoy = new Date();
+	return hoy.getDate() + '-' + ( hoy.getMonth() + 1 ) + '-' + hoy.getFullYear();
+}
 
+exports.usuarioRespondio = ( req, res ) => {
 	let respondio = new PreguntasRespondidas({
 		ID_usuario: req.body.ID_Usuario,
 		ID_pregunta: req.body.ID_Pregunta,
 		estado: req.body.estado,
 		tiempo: req.body.tiempo,
-		fecha: fecha.toISOString()
+		fecha: fechaActual()
 	});
 	respondio.save().then(( r ) => {
-		res.send( ' Registro ingresado' );
+		res.send( {
+			mensaje: 'Correcto'
+		} );
 	}).catch (( err ) => {
 		res.send( 'Error: ' + err.message );
 	});
@@ -175,3 +256,9 @@ exports.pregunta_create = function(req,res){
 exports.pregunta_new = function(req,res){
 	res.sendFile('/views/test.html',{root: '.'})
 };
+
+function error( res, err ) {
+	res.send( {
+		error: err
+	} );
+}

@@ -23,7 +23,7 @@ var PreguntasRespondidasSchema = new Schema( {
 		default: Date.now
 	},
 	fecha: {
-		type: Date,
+		type: String,
 		required: true
 	}
 } );
