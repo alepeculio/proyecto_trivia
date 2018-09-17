@@ -235,14 +235,3 @@ exports.pregunta_new = function(req,res){
 	res.sendFile('/views/test.html',{root: '.'})
 };
 
-<<<<<<< HEAD
-exports.pregunta = function(req,res){
-	
-};
-=======
-function error( res, err ) {
-	res.send( {
-		error: err
-	} );
-}
->>>>>>> 43c500ecb0ae2ef299b8b1ba348c118cadc85a01
