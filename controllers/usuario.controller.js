@@ -25,42 +25,37 @@ function crearUsuario(req, res, tipo, mmrestantes, puntaje){
 			mmrestantes: (mmrestantes != undefined) ? mmrestantes : fields.mmrestantes[0],
 			puntaje: (puntaje != undefined) ? puntaje : fields.puntaje[0]
 		});
-	
-		if(files.img[0].originalFilename != ''){
+		
+		var imgPath;
+		var contentType; //Extención del archivo.
+		if(files.img !== undefined ){
 			var filename = files.img[0].originalFilename.split('.');
-			var contentType = filename[filename.length - 1]; //Extención del archivo.
-			var imgPath = files.img[0].path;
-
-			fs.readFile(imgPath, (err, data) => {
-				if (err){ 
-					console.log(err);
-					return;
-				}
-
-				usuario.img.data = data;
-				usuario.img.contentType = contentType;
-
-				usuario.save()
-				.then((u) => {
-					res.json({Mensaje: 'Usuario agregado con éxito.'});
-				})
-				.catch((err) => {
-					console.log(err);
-					res.json({Error: 'No se pudo agregar el usuario debido al siguiente error: '+err.message});
-				});
-
-			});
+			contentType = filename[filename.length - 1]; 
+			imgPath = files.img[0].path;
 		}else{
+			imgPath = './views/img/user_default.png';
+			contentType = 'png';
+		}
+
+		fs.readFile(imgPath, (err, data) => {
+			if (err){ 
+				console.log(err);
+				return;
+			}
+
+			usuario.img.data = data;
+			usuario.img.contentType = contentType;
+
 			usuario.save()
 			.then((u) => {
 				res.json({Mensaje: 'Usuario agregado con éxito.'});
-
 			})
 			.catch((err) => {
 				console.log(err);
 				res.json({Error: 'No se pudo agregar el usuario debido al siguiente error: '+err.message});
 			});
-		}
+
+		});
 	});
 }
 
@@ -150,9 +145,16 @@ exports.eliminar = (req, res) => {
 }
 
 exports.listar = (req, res) => {
-	Usuario.find({}, null, {sort:{puntaje: -1}})
-	.then(users => {
-		if(users.length == 0){
+	let cantidad = req.query.cantidad;
+	if(cantidad != undefined){
+		cantidad = Number(cantidad);
+	}
+
+	Usuario.find({}, null, {sort:{puntaje: -1}}).limit(cantidad).exec((err, users)  => {
+		if(err){
+			console.log(err);
+			res.json({Error: 'No se pudieron listar los usuarios debido al siguiente error: '+err.message});
+		}else if(users.length == 0){
 			res.json({Mensaje: 'No hay usuarios'});
 		}else{
 			let usuarios = [];
@@ -173,9 +175,34 @@ exports.listar = (req, res) => {
 			}
 			res.json({usuarios :usuarios});
 		}
-	})
-	.catch(err => {
-		console.log(err);
-		res.json({Error: 'No se pudieron listar los usuarios debido al siguiente error: '+err.message});
+	});
+}
+
+exports.iniciarSesion = (req, res) =>{
+	let correo = req.body.correo;
+	let pass = req.body.pass;
+
+	Usuario.find({correo: correo, pass:pass})
+	.then((usuarios) => {
+		if(usuarios.length == 0){
+			res.json({Mensaje: 'Login incorrecto.'});
+		}else{
+			var u = usuarios[0];
+			var imgBase64 = (u.img.data != undefined) ? 'data:image/jpeg;base64,'+u.img.data.toString('base64') : ''; //Pasar a base64, para usarla directamente en el img src.
+			let usuario = {
+				id:u._id,
+				correo: u.correo,
+				nombre: u.nombre,
+				apellido: u.apellido,
+				pass: u.pass,
+				tipo: u.tipo,
+				mmrestantes: u.mmrestantes,
+				puntaje: u.puntaje,
+				img: imgBase64
+			}
+			res.json(usuario);
+		}
+	}).catch((err) => {
+		res.json({Error: 'No se pudo obtener el usuario debido al siguiente error: '+err.message});
 	});
 }
