@@ -11,5 +11,6 @@ router.get('/listar', usuario_controller.listar);
 router.post('/actualizar', usuario_controller.actualizar);
 router.post('/actualizarSuscripcion', usuario_controller.actualizarSuscripcion);
 router.post('/eliminar', usuario_controller.eliminar);
+router.post('/iniciarSesion', usuario_controller.iniciarSesion);
 
 module.exports = router;
