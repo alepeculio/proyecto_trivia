@@ -2,6 +2,7 @@ var mongoose = require('mongoose');
 const Usuario = require('../models/usuario.model');
 const multiparty = require('multiparty');
 const fs = require('fs');
+const ManoaMano = require('../models/mano_a_mano.model');
 
 exports.inicio = (req, res) => {
 	res.render('usuarios.ejs');
@@ -205,4 +206,82 @@ exports.iniciarSesion = (req, res) =>{
 	}).catch((err) => {
 		res.json({Error: 'No se pudo obtener el usuario debido al siguiente error: '+err.message});
 	});
+}
+
+//luis
+exports.retos = (req,res) => {
+	res.render('mano.ejs');
+}
+
+exports.retar = (req,res) => {
+	let mano_a_mano = new ManoaMano({
+		_id: new mongoose.Types.ObjectId(),
+		ID_retador: req.body.ID_retador,
+		ID_retado: req.body.ID_retado,
+		ID_ganador: null,
+		ID_perdedor: null,
+		cant_correcta_retador: "",
+		tiempo_retador: null
+	});
+	mano_a_mano.save().then(( r ) => {
+		res.send( ' Usuario retado' );
+	}).catch (( err ) => {
+		res.send( 'Error: ' + err.message );
+	});
+}
+
+exports.cancelarReto = (req,res) => {
+	ManoaMano.findOneAndDelete(req.body.ID_duelo, (err, duelo) =>{
+		if(err) res.send('Error: '+ err.message);
+
+		res.send('Duelo cancelado');
+	});
+}
+
+exports.cancelarDuelo = (req,res) => {
+	res.render('cancelar_reto.ejs');
+}
+
+exports.listarRetos = (req,res) => {
+	ManoaMano.find({}, null, {sort:{cant_correcta_retador: -1}})
+	.then(duels => {
+		res.statusCode = 200;
+		res.setHeader('Content-Type','application/json');
+		if(duels.length == 0){
+			res.write(JSON.stringify({Mensaje: 'No hay duelos'}));
+		}else{
+			let duelos = [];
+			for(d of duels){
+
+				let duelo  = {
+					id:d._id,
+					ID_retador: d.ID_retador,
+					ID_retado: d.ID_retado,
+					ID_ganador: d.ID_ganador,
+					ID_perdedor: d.ID_perdedor,
+					cant_correcta_retador: d.cant_correcta_retador,
+					tiempo_retador: d.tiempo_retador
+				}
+				duelos.push(duelo);
+			}
+			res.write(JSON.stringify({duelos :duelos}));
+		}
+		res.end();
+
+	})
+	.catch(err => {
+		console.log(err);
+	});
+}
+
+exports.finalizarDuelo = (req,res) => {
+	/* ManoMano
+	_id:
+ID_retador
+ID_retado
+ID_ganador
+ID_perdedor
+cant_correctar_retador
+tiempo_retador*/
+
 }
