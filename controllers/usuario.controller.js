@@ -61,26 +61,22 @@ function crearUsuario(req, res, tipo, mmrestantes, puntaje){
 
 exports.obtener = (req, res) => { //Retorna un objeto json con los datos del usuario.
 	let correo = req.query.correo;
+	let id = req.query.id;
+	let buscar;
+	if(id != undefined){
+		buscar = {_id:id};
+	}else if(correo != undefined){
+		buscar = {correo:correo};
+	}else{
+		res.json({Error: "Se debe de especificar al menos un parametro, 'id' o 'correo'"});
+	}
 
-	Usuario.find({correo: correo})
+	Usuario.find(buscar)
 	.then((usuarios) => {
 		if(usuarios.length == 0){
 			res.json({Mensaje: 'El usuario solicitado no existe.'});
 		}else{
-			var u = usuarios[0];
-			var imgBase64 = (u.img.data != undefined) ? 'data:image/jpeg;base64,'+u.img.data.toString('base64') : ''; //Pasar a base64, para usarla directamente en el img src.
-			let usuario = {
-				id:u._id,
-				correo: u.correo,
-				nombre: u.nombre,
-				apellido: u.apellido,
-				pass: u.pass,
-				tipo: u.tipo,
-				mmrestantes: u.mmrestantes,
-				puntaje: u.puntaje,
-				img: imgBase64
-			}
-			res.json(usuario);
+			res.json(getUser(usuarios[0]));
 		}
 	}).catch((err) => {
 		res.json({Error: 'No se pudo obtener el usuario debido al siguiente error: '+err.message});
@@ -159,19 +155,7 @@ exports.listar = (req, res) => {
 		}else{
 			let usuarios = [];
 			for(u of users){
-				var imgBase64 = (u.img.data != undefined) ? 'data:image/jpeg;base64,'+u.img.data.toString('base64') : ''; //Pasar a base64, para usarla directamente en el img src.
-				let usuario  = {
-					id:u._id,
-					correo: u.correo,
-					nombre: u.nombre,
-					apellido: u.apellido,
-					pass: u.pass,
-					tipo: u.tipo,
-					mmrestantes: u.mmrestantes,
-					puntaje: u.puntaje,
-					img: imgBase64
-				}
-				usuarios.push(usuario);
+				usuarios.push(getUser(u));
 			}
 			res.json({usuarios :usuarios});
 		}
@@ -187,22 +171,25 @@ exports.iniciarSesion = (req, res) =>{
 		if(usuarios.length == 0){
 			res.json({Mensaje: 'Login incorrecto.'});
 		}else{
-			var u = usuarios[0];
-			var imgBase64 = (u.img.data != undefined) ? 'data:image/jpeg;base64,'+u.img.data.toString('base64') : ''; //Pasar a base64, para usarla directamente en el img src.
-			let usuario = {
-				id:u._id,
-				correo: u.correo,
-				nombre: u.nombre,
-				apellido: u.apellido,
-				pass: u.pass,
-				tipo: u.tipo,
-				mmrestantes: u.mmrestantes,
-				puntaje: u.puntaje,
-				img: imgBase64
-			}
-			res.json(usuario);
+			res.json(getUser(usuarios[0]));
 		}
 	}).catch((err) => {
 		res.json({Error: 'No se pudo obtener el usuario debido al siguiente error: '+err.message});
 	});
+}
+
+function getUser(u){
+	var imgBase64 = (u.img.data != undefined) ? 'data:image/jpeg;base64,'+u.img.data.toString('base64') : ''; //Pasar a base64, para usarla directamente en el img src.
+	let usuario = {
+		id:u._id,
+		correo: u.correo,
+		nombre: u.nombre,
+		apellido: u.apellido,
+		pass: u.pass,
+		tipo: u.tipo,
+		mmrestantes: u.mmrestantes,
+		puntaje: u.puntaje,
+		img: imgBase64
+	}
+	return usuario;
 }
