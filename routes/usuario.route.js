@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+var VerifyToken = require( '../auth/VerifyToken' );
+var AuthController = require( '../auth/AuthController' );
 
 // Requiere al controlador
 const usuario_controller = require('../controllers/usuario.controller');
@@ -21,4 +23,9 @@ router.post('/cancelarReto', usuario_controller.cancelarReto);
 router.get('/listarRetos', usuario_controller.listarRetos);
 router.get('/listarRetosPropios', usuario_controller.listarRetosPropios);
 router.post('/finalizarDuelo', usuario_controller.finalizarDuelo);
+
+router.post( '/authRegistro', AuthController.authRegistro );
+router.get( '/authMe', VerifyToken, AuthController.authMe );
+router.post( '/authLogin', AuthController.authLogin );
+
 module.exports = router;

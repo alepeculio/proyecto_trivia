@@ -4,9 +4,12 @@ var mongoose = require( 'mongoose' );
 const PreguntasRespondidas = require( '../models/preguntas_respondidas.model.js' );
 const PreguntasDiarias = require( '../models/preguntas_diarias.model.js' );
 const Pregunta = require('../models/pregunta.model');
+const Usuario = require('../models/usuario.model');
 const Categoria = require('../models/categoria.model');
 
 var csv = require( 'csv-express' );
+
+const aumentoPorPregDiaria = 1;
 
 exports.exportar = ( req, res ) => {
 	Pregunta.find( {}, ( err, pregs ) => {
@@ -33,7 +36,7 @@ exports.importar = ( req, res ) => {
 	} );
 
 	lectorLinea.on( 'line', ( linea ) => {
-		let campos = linea.split( '&' );
+		let campos = linea.split( ',' );
 
 		for (let i = 0; i < campos.length; i++)
 			campos[i] = campos[i].trim();
@@ -94,7 +97,7 @@ exports.preguntasDiarias = ( req, res ) => {
 						// Recorremos las respondidas
 						for ( let j = 0; j < respondidas.length; j++ )
 							// Si encontramos esa pregunta entre las respondidas
-							if ( diarias[i].ID_pregunta._id.equals( respondidas[j].ID_pregunta ) ) {
+						if ( diarias[i].ID_pregunta._id.equals( respondidas[j].ID_pregunta ) ) {
 								// Guardamos su estado
 								estado = respondidas[j].estado;
 								// La quitamos de la lista para no recorrer tanto la siguiente vez
@@ -117,6 +120,7 @@ exports.preguntasDiarias = ( req, res ) => {
 };
 
 exports.generarPreguntaDiaria = ( req, res ) => {
+	
 	let id_usu = req.body.ID_Usuario;
 	let cat = req.body.categoria;
 	let position = req.body.posicion;
@@ -196,6 +200,7 @@ function fechaActual() {
 }
 
 exports.usuarioRespondio = ( req, res ) => {
+	
 	let respondio = new PreguntasRespondidas({
 		ID_usuario: req.body.ID_Usuario,
 		ID_pregunta: req.body.ID_Pregunta,
@@ -203,6 +208,7 @@ exports.usuarioRespondio = ( req, res ) => {
 		tiempo: req.body.tiempo,
 		fecha: fechaActual()
 	});
+
 	respondio.save().then(( r ) => {
 		res.send( {
 			mensaje: 'Correcto'
@@ -211,6 +217,32 @@ exports.usuarioRespondio = ( req, res ) => {
 		res.send( 'Error: ' + err.message );
 	});
 };
+exports.cambiarEstado = (req,res)=>{
+	let query = { ID_pregunta: req.body.ID_Pregunta , ID_usuario: req.body.ID_Usuario};
+
+	let update = {
+		estado: req.body.estado,
+		tiempo: req.body.tiempo
+	}
+	PreguntasRespondidas.findOneAndUpdate(query,update, (err, usuario) => {
+		if(err){
+			console.log(err);
+			res.json({Error: 'No se que pinto: '+err.message});
+			return;
+		}
+
+		if ( update.estado === "Correcta" ) {
+			Usuario.update( { _id: usuario.ID_usuario }, { $inc: { puntaje: aumentoPorPregDiaria } }, ( err, usuario ) => {
+				if ( err )
+					res.json( { Error: 'No se que pinto: ' + err.message } );
+				else 
+					res.json( { Mensaje: 'Correcto' } );
+			} );
+		} else
+			res.json({Mensaje: 'Correcto'});
+	});
+}
+
 exports.categoria_create = function(req,res){
 	var categoria = new Categoria({
 		_id: new mongoose.Types.ObjectId(),

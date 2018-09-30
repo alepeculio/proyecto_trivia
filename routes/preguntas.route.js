@@ -9,6 +9,7 @@ router.get( '/', pregunta_controller.preguntas );
 router.get( '/preguntasDiarias', pregunta_controller.preguntasDiarias );
 router.post( '/generarPreguntaDiaria', pregunta_controller.generarPreguntaDiaria );
 router.post( '/usuarioRespondio', pregunta_controller.usuarioRespondio );
+router.post( '/cambiarEstado', pregunta_controller.cambiarEstado );
 
 router.post('/crearCategoria', pregunta_controller.categoria_create);
 router.post('/crearPregunta', pregunta_controller.pregunta_create);
