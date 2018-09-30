@@ -204,6 +204,7 @@ exports.retos = (req,res) => {
 }
 
 exports.retar = (req,res) => {
+	//falta terminar
 	let mano_a_mano = new ManoaMano({
 		_id: new mongoose.Types.ObjectId(),
 		ID_retador: req.body.ID_retador,
@@ -223,7 +224,6 @@ exports.retar = (req,res) => {
 exports.cancelarReto = (req,res) => {
 	ManoaMano.findOneAndDelete(req.body.ID_duelo, (err, duelo) =>{
 		if(err) res.send('Error: '+ err.message);
-
 		res.send('Duelo cancelado');
 	});
 }
@@ -233,7 +233,7 @@ exports.cancelarDuelo = (req,res) => {
 }
 
 exports.listarRetos = (req,res) => {
-	ManoaMano.find({}, null, {sort:{cant_correcta_retador: -1}})
+	ManoaMano.find({ID_retado: req.query.id}, null, )
 	.then(duels => {
 		res.statusCode = 200;
 		res.setHeader('Content-Type','application/json');
@@ -242,7 +242,37 @@ exports.listarRetos = (req,res) => {
 		}else{
 			let duelos = [];
 			for(d of duels){
+				let duelo  = {
+					id:d._id,
+					ID_retador: d.ID_retador,
+					ID_retado: d.ID_retado,
+					ID_ganador: d.ID_ganador,
+					ID_perdedor: d.ID_perdedor,
+					cant_correcta_retador: d.cant_correcta_retador,
+					tiempo_retador: d.tiempo_retador
+				}
+				duelos.push(duelo);
+			}
+			res.write(JSON.stringify({duelos :duelos}));
+		}
+		res.end();
 
+	})
+	.catch(err => {
+		console.log(err);
+	});
+}
+
+exports.listarRetosPropios = (req,res) => {
+	ManoaMano.find({ID_retador: req.query.id}, null, )
+	.then(duels => {
+		res.statusCode = 200;
+		res.setHeader('Content-Type','application/json');
+		if(duels.length == 0){
+			res.write(JSON.stringify({Mensaje: 'No hay duelos'}));
+		}else{
+			let duelos = [];
+			for(d of duels){
 				let duelo  = {
 					id:d._id,
 					ID_retador: d.ID_retador,

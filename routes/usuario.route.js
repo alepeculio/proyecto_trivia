@@ -19,5 +19,6 @@ router.post('/retar', usuario_controller.retar);
 router.get('/cancelarDuelo', usuario_controller.cancelarDuelo);
 router.post('/cancelarReto', usuario_controller.cancelarReto);
 router.get('/listarRetos', usuario_controller.listarRetos);
+router.get('/listarRetosPropios', usuario_controller.listarRetosPropios);
 router.post('/finalizarDuelo', usuario_controller.finalizarDuelo);
 module.exports = router;
