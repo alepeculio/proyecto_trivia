@@ -10,7 +10,7 @@ exports.inicio = (req, res) => {
 }
 
 exports.registro = (req, res) => {
-	crearUsuario(req,res, 'SinSuscripcion', 3, 200);
+	crearUsuario(req,res, 'SinSuscripcion', 3, 0);
 }
 
 function crearUsuario(req, res, tipo, mmrestantes, puntaje){

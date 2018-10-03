@@ -10,7 +10,7 @@ const multiparty = require('multiparty');
 var fs = require( 'fs' );
 
 exports.authRegistro = ( req, res ) => {
-	crearUsuario( req, res, 'SinSuscripcion', 3, 200 );
+	crearUsuario( req, res, 'SinSuscripcion', 3, 0 );
 };
 
 function crearUsuario( req, res, tipo, mmrestantes, puntaje ) {

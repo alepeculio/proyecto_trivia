@@ -239,7 +239,7 @@ exports.cambiarEstado = (req,res)=>{
 					res.json( { Mensaje: 'Correcto' } );
 			} );
 		} else
-			res.json({Mensaje: 'Correcto'});
+		res.json({Mensaje: 'Correcto'});
 	});
 }
 
@@ -289,3 +289,7 @@ exports.pregunta_new = function(req,res){
 	res.sendFile('/views/test.html',{root: '.'})
 };
 
+function error(res, err){
+	console.log(err.message);
+	res.json({Error: err.message});
+}
