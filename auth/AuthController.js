@@ -10,7 +10,7 @@ const multiparty = require('multiparty');
 var fs = require( 'fs' );
 
 exports.authRegistro = ( req, res ) => {
-	crearUsuario( req, res, 'SinSuscripcion', 3, 200 );
+	crearUsuario( req, res, 'SinSuscripcion', 3, 0 );
 };
 
 function crearUsuario( req, res, tipo, mmrestantes, puntaje ) {
@@ -56,7 +56,7 @@ function crearUsuario( req, res, tipo, mmrestantes, puntaje ) {
 				} )
 				.catch( ( err ) => {
 					console.log( err );
-					res.status( 500 ).json( { Error: 'No se pudo agregar el usuario debido al sguiente error: ' + err.message } );
+					res.status( 500 ).json( { Error: 'No se pudo agregar el usuario debido al siguiente error: ' + err.message } );
 				} );
 		} );
 	} );
@@ -79,7 +79,7 @@ exports.authMe = ( req, res, next ) => {
 			if ( !usuario )
 				return res.status( 404 ).send( 'No se encontró el usuario' );
 
-			res.status( 200 ).send( usuario );
+			res.status( 200 ).send( getUser(usuario) );
 		} );
 	} );
 };
@@ -101,3 +101,19 @@ exports.authLogin = ( req, res ) => {
 		res.status( 200 ).send( { auth: true, token: token } );
 	} );
 };
+
+function getUser(u){
+	var imgBase64 = (u.img.data != undefined) ? 'data:image/jpeg;base64,'+u.img.data.toString('base64') : ''; //Pasar a base64, para usarla directamente en el img src.
+	let usuario = {
+		id:u._id,
+		correo: u.correo,
+		nombre: u.nombre,
+		apellido: u.apellido,
+		pass: u.pass,
+		tipo: u.tipo,
+		mmrestantes: u.mmrestantes,
+		puntaje: u.puntaje,
+		img: imgBase64
+	}
+	return usuario;
+}

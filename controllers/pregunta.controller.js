@@ -4,9 +4,12 @@ var mongoose = require( 'mongoose' );
 const PreguntasRespondidas = require( '../models/preguntas_respondidas.model.js' );
 const PreguntasDiarias = require( '../models/preguntas_diarias.model.js' );
 const Pregunta = require('../models/pregunta.model');
+const Usuario = require('../models/usuario.model');
 const Categoria = require('../models/categoria.model');
 
 var csv = require( 'csv-express' );
+
+const aumentoPorPregDiaria = 1;
 
 exports.exportar = ( req, res ) => {
 	Pregunta.find( {}, ( err, pregs ) => {
@@ -227,6 +230,15 @@ exports.cambiarEstado = (req,res)=>{
 			res.json({Error: 'No se que pinto: '+err.message});
 			return;
 		}
+
+		if ( update.estado === "Correcta" ) {
+			Usuario.update( { _id: usuario.ID_usuario }, { $inc: { puntaje: aumentoPorPregDiaria } }, ( err, usuario ) => {
+				if ( err )
+					res.json( { Error: 'No se que pinto: ' + err.message } );
+				else 
+					res.json( { Mensaje: 'Correcto' } );
+			} );
+		} else
 		res.json({Mensaje: 'Correcto'});
 	});
 }
@@ -277,3 +289,7 @@ exports.pregunta_new = function(req,res){
 	res.sendFile('/views/test.html',{root: '.'})
 };
 
+function error(res, err){
+	console.log(err.message);
+	res.json({Error: err.message});
+}
