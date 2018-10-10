@@ -23,6 +23,7 @@ router.post('/cancelarReto', usuario_controller.cancelarReto);
 router.get('/listarRetos', usuario_controller.listarRetos);
 router.get('/listarRetosPropios', usuario_controller.listarRetosPropios);
 router.post('/finalizarDuelo', usuario_controller.finalizarDuelo);
+router.get('/usuariosSinRetar', usuario_controller.usuariosSinRetar);
 
 router.post( '/authRegistro', AuthController.authRegistro );
 router.get( '/authMe', VerifyToken, AuthController.authMe );

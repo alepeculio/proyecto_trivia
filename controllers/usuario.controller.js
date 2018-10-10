@@ -294,14 +294,76 @@ exports.listarRetosPropios = (req,res) => {
 	});
 }
 
+exports.usuariosSinRetar = (req,res) => {
+	let retados = [];
+
+	ManoaMano.find({ $or: [ { ID_retador: req.query.id } , { ID_retado: req.query.id } ] })
+	.exec(function(err,result){
+		res.statusCode = 200;
+		res.setHeader('Content-Type','application/json');
+		if(result.length == 0){
+			Usuario.find({ _id: { $not: { $eq: req.query.id } } }).exec((err, users)  => {
+				if(err){
+					console.log(err);
+					res.json({Error: 'No se pudieron listar los usuarios debido al siguiente error: '+err.message});
+				}else{
+					let usuarios = [];
+					for(u of users){
+						usuarios.push(getUser(u));
+					}
+					res.json({usuarios :usuarios});
+				}
+			});
+
+		}else{
+			
+			for(r of result){
+				if(r.ID_retador == req.query.id){
+					retados.push(r.ID_retado);
+				}else{
+					retados.push(r.ID_retador);
+				}
+			}
+
+			if(retados.length != 0){
+				let coso = new Object();
+				coso._id = {};
+				coso._id.$nin = [];
+				coso._id.$nin.push(req.query.id);
+				let n = retados.length;
+				for(let i=0; i < n; i++){
+					coso._id.$nin.push(retados[i]);
+			}
+	
+			Usuario.find(coso)
+			.exec(function(error, usus){ 
+				if(error) console.log(error);
+				let usuarios = [];
+				for(u of usus){
+					usuarios.push(getUser(u));
+				}
+				res.json({usuarios: usuarios});
+			});
+		}
+	}
+
+});
+}
+
+exports.comenzarDuelo = (req,res) => {
+
+}
+
 exports.finalizarDuelo = (req,res) => {
-	/* ManoMano
-	_id:
+/* 
+ManoMano
+_id:
 ID_retador
 ID_retado
 ID_ganador
 ID_perdedor
 cant_correctar_retador
-tiempo_retador*/
+tiempo_retador
+*/
 
 }
