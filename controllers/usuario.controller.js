@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+var bcryptjs = require ( 'bcryptjs' );
 const Usuario = require('../models/usuario.model');
 const multiparty = require('multiparty');
 const fs = require('fs');
@@ -17,12 +18,14 @@ function crearUsuario(req, res, tipo, mmrestantes, puntaje){
 	var form = new multiparty.Form(); //Para el manejo de datos de formularios 'multipart/form-data'
 
 	form.parse(req, function(err, fields, files) {
+		var hashedPassword = bcryptjs.hashSync( fields.pass[0], 8 );
+
 		let usuario = new Usuario ({
 			_id: mongoose.Types.ObjectId(),
 			correo: fields.correo[0],
 			nombre: fields.nombre[0],
 			apellido: fields.apellido[0],
-			pass: fields.pass[0],
+			pass: hashedPassword,
 			tipo: (tipo != undefined) ? tipo : fields.tipo[0],
 			mmrestantes: (mmrestantes != undefined) ? mmrestantes : fields.mmrestantes[0],
 			puntaje: (puntaje != undefined) ? puntaje : fields.puntaje[0]
@@ -91,7 +94,7 @@ exports.actualizar = (req, res) => {
 	let update = {
 		nombre: req.body.nombre,
 		apellido: req.body.apellido,
-		pass: req.body.pass,
+		pass: bcryptjs.hashSync( req.body.pass, 8 ),
 		tipo: req.body.tipo,
 		mmrestantes: req.body.mmrestantes,
 		puntaje: req.body.puntaje,
@@ -109,7 +112,7 @@ exports.actualizar = (req, res) => {
 
 exports.actualizarSuscripcion = (req, res) => {
 	let query = { correo: req.body.correo };
-
+	
 	let update = {
 		tipo: req.body.tipo
 	}

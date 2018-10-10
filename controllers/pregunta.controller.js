@@ -31,29 +31,71 @@ exports.exportar = ( req, res ) => {
 };
 
 exports.importar = ( req, res ) => {
-	var lectorLinea = require( 'readline' ).createInterface( {
-		input: fs.createReadStream( './preguntas.csv' )
-	} );
+	Categoria.remove( {}, () => {
+		Pregunta.remove( {}, () => {
+			Categoria.insertMany( [
+				{ _id: new mongoose.Types.ObjectId(), name: "Historia"},
+				{ _id: new mongoose.Types.ObjectId(), name: "Geografía"},
+				{ _id: new mongoose.Types.ObjectId(), name: "Deportes"},
+				{ _id: new mongoose.Types.ObjectId(), name: "Ciencia y Tecnología"},
+				{ _id: new mongoose.Types.ObjectId(), name: "Arte y Literatura"},
+				{ _id: new mongoose.Types.ObjectId(), name: "Entretenimiento"},
+			], ( err, data ) => {
+				if ( err )
+					return res.send( err );
 
-	lectorLinea.on( 'line', ( linea ) => {
-		let campos = linea.split( ',' );
+				require( 'readline' ).createInterface( {
+					input: fs.createReadStream( './preguntas/preguntas.csv' )
+				} ).on( 'line', ( linea ) => {
+					let campos = linea.split( ',' );
 
-		for (let i = 0; i < campos.length; i++)
-			campos[i] = campos[i].trim();
+					let catId = "";
+					for ( let i = 0; i < data.length; i++ )
+						if ( data[i].name === campos[1] ) {
+							catId = data[i]._id;
+							break;
+						}
 
-		let respuestas = campos.splice( 2, 4 );
+					if ( catId === "" )
+						return;
 
-		let pregunta = new Pregunta( {
-			_id: new mongoose.Types.ObjectId(),
-			pregunta: campos[0],
-			respuestas: respuestas,
-			categoria: campos[1]
+					let respuestas = campos.splice( 2, 4 );
+					for ( let i = 0; i < respuestas.length; i++ )
+						if ( respuestas[i].includes( '#' ) ) {
+							let temp = respuestas[0];
+							respuestas[0] = respuestas[i];
+							respuestas[i] = temp;
+						}
+
+					respuestas[0] = respuestas[0].split( "#" )[1];
+
+					let pregunta = new Pregunta( {
+						_id: new mongoose.Types.ObjectId(),
+						pregunta: campos[0],
+						respuestas: respuestas,
+						categoria: catId
+					} );
+
+					pregunta.save();
+				} );
+			} );
+			res.send( 'Cargando preguntas...' );
 		} );
-
-		pregunta.save();
 	} );
+};
 
-	res.send( 'Cargarndo preguntas...' );
+exports.temp = ( req, res ) => {
+	require( 'fs' ).readFile( './preguntas/preguntas.csv', 'utf8', ( err, data ) => {
+		let lineas = data.toString().split( '\n' );
+
+		let resp = "";
+		for ( let i = 0; i < lineas.length; i++ ) {
+			if ( lineas[i].split( "," ).length == 6 )
+				resp += lineas[i] + "<br>";
+		}
+
+		res.send( resp );
+	} );
 };
 
 exports.preguntas = ( req, res ) => {
