@@ -202,12 +202,11 @@ function getUser(u){
 /*[FIN Ale] ========================================================================================*/
 
 //luis
-exports.retos = (req,res) => {
-	res.render('mano.ejs');
+exports.retos = (req, res) => {
+	res.render('retar.ejs');
 }
 
 exports.retar = (req,res) => {
-	//falta terminar
 	let mano_a_mano = new ManoaMano({
 		_id: new mongoose.Types.ObjectId(),
 		ID_retador: req.body.ID_retador,
@@ -217,94 +216,156 @@ exports.retar = (req,res) => {
 		cant_correcta_retador: "",
 		tiempo_retador: null
 	});
-	mano_a_mano.save().then(( r ) => {
-		res.send( ' Usuario retado' );
-	}).catch (( err ) => {
-		res.send( 'Error: ' + err.message );
+
+	mano_a_mano.save( (err) => {
+		if(err){
+			res.send(JSON.stringify({Error: 'No se pudo retar al usuario debido al siguiente error'}));
+		}else{
+			res.send(JSON.stringify({Mensaje: 'Usuario retado correctamente'}));
+		}
 	});
 }
 
 exports.cancelarReto = (req,res) => {
-	ManoaMano.findOneAndDelete(req.body.ID_duelo, (err, duelo) =>{
-		if(err) res.send('Error: '+ err.message);
-		res.send('Duelo cancelado');
+	ManoaMano.findOneAndDelete({ID_retador: req.body.ID_retador , ID_retado: req.body.ID_retado} , (err,duelo) => {
+		if(err) res.send(JSON.stringify({Error: 'No se pudo cancelar el reto'}));
+		res.send(JSON.stringify({Mensaje: 'El duelo ha sido cancelado'}));
 	});
 }
 
-exports.cancelarDuelo = (req,res) => {
-	res.render('cancelar_reto.ejs');
-}
-
 exports.listarRetos = (req,res) => {
-	ManoaMano.find({ID_retado: req.query.id}, null, )
-	.then(duels => {
+	ManoaMano.find({ID_retado: req.query.id})
+	.exec(function(err,duels){
 		res.statusCode = 200;
 		res.setHeader('Content-Type','application/json');
 		if(duels.length == 0){
 			res.write(JSON.stringify({Mensaje: 'No hay duelos'}));
 		}else{
-			let duelos = [];
+			let coso = new Object();
+			coso._id = {};
+			coso._id.$in = [];
 			for(d of duels){
-				let duelo  = {
-					id:d._id,
-					ID_retador: d.ID_retador,
-					ID_retado: d.ID_retado,
-					ID_ganador: d.ID_ganador,
-					ID_perdedor: d.ID_perdedor,
-					cant_correcta_retador: d.cant_correcta_retador,
-					tiempo_retador: d.tiempo_retador
-				}
-				duelos.push(duelo);
+				coso._id.$in.push(d.ID_retador);
 			}
-			res.write(JSON.stringify({duelos :duelos}));
-		}
-		res.end();
+			Usuario.find(coso).exec(function(err, usuarios){
+				if(err) console.log(err);
 
-	})
-	.catch(err => {
-		console.log(err);
+				let usus = [];
+
+				if(usuarios.length != 0){
+					for(u of usuarios){
+						usus.push(getUser(u));
+					}
+				}
+				res.json({'duelos':usus});
+			});
+
+		}
 	});
 }
 
 exports.listarRetosPropios = (req,res) => {
-	ManoaMano.find({ID_retador: req.query.id}, null, )
-	.then(duels => {
+	ManoaMano.find({ID_retador: req.query.id})
+	.exec(function(err,duels){
 		res.statusCode = 200;
 		res.setHeader('Content-Type','application/json');
 		if(duels.length == 0){
 			res.write(JSON.stringify({Mensaje: 'No hay duelos'}));
 		}else{
-			let duelos = [];
+			let coso = new Object();
+			coso._id = {};
+			coso._id.$in = [];
 			for(d of duels){
-				let duelo  = {
-					id:d._id,
-					ID_retador: d.ID_retador,
-					ID_retado: d.ID_retado,
-					ID_ganador: d.ID_ganador,
-					ID_perdedor: d.ID_perdedor,
-					cant_correcta_retador: d.cant_correcta_retador,
-					tiempo_retador: d.tiempo_retador
-				}
-				duelos.push(duelo);
+				coso._id.$in.push(d.ID_retado);
 			}
-			res.write(JSON.stringify({duelos :duelos}));
-		}
-		res.end();
 
-	})
-	.catch(err => {
-		console.log(err);
+			Usuario.find(coso).exec(function(err, usuarios){
+				if(err) console.log(err);
+
+				let usus = [];
+
+				if(usuarios.length != 0){
+					for(u of usuarios){
+						usus.push(getUser(u));
+					}
+				}
+
+				res.json({'duelos':usus});
+			});
+		}
 	});
 }
 
+exports.usuariosSinRetar = (req,res) => {
+	let retados = [];
+
+	ManoaMano.find({ $or: [ { ID_retador: req.query.id } , { ID_retado: req.query.id } ] })
+	.exec(function(err,result){
+		res.statusCode = 200;
+		res.setHeader('Content-Type','application/json');
+		if(result.length == 0){
+			Usuario.find({ _id: { $not: { $eq: req.query.id } } }).exec((err, users)  => {
+				if(err){
+					console.log(err);
+					res.json({Error: 'No se pudieron listar los usuarios debido al siguiente error: '+err.message});
+				}else{
+					let usuarios = [];
+					for(u of users){
+						usuarios.push(getUser(u));
+					}
+					res.json({usuarios :usuarios});
+				}
+			});
+
+		}else{
+
+			for(r of result){
+				if(r.ID_retador == req.query.id){
+					retados.push(r.ID_retado);
+				}else{
+					retados.push(r.ID_retador);
+				}
+			}
+
+			if(retados.length != 0){
+				let coso = new Object();
+				coso._id = {};
+				coso._id.$nin = [];
+				coso._id.$nin.push(req.query.id);
+				let n = retados.length;
+				for(let i=0; i < n; i++){
+					coso._id.$nin.push(retados[i]);
+				}
+
+				Usuario.find(coso)
+				.exec(function(error, usus){ 
+					if(error) console.log(error);
+					let usuarios = [];
+					for(u of usus){
+						usuarios.push(getUser(u));
+					}
+					res.json({usuarios: usuarios});
+				});
+			}
+		}
+
+	});
+}
+
+exports.comenzarDuelo = (req,res) => {
+
+}
+
 exports.finalizarDuelo = (req,res) => {
-	/* ManoMano
-	_id:
+/* 
+ManoMano
+_id:
 ID_retador
 ID_retado
 ID_ganador
 ID_perdedor
 cant_correctar_retador
-tiempo_retador*/
+tiempo_retador
+*/
 
 }
