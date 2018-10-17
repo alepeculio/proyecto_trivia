@@ -40,45 +40,45 @@ exports.importar = ( req, res ) => {
 				{ _id: new mongoose.Types.ObjectId(), name: "Ciencia y Tecnología"},
 				{ _id: new mongoose.Types.ObjectId(), name: "Arte y Literatura"},
 				{ _id: new mongoose.Types.ObjectId(), name: "Entretenimiento"},
-			], ( err, data ) => {
-				if ( err )
-					return res.send( err );
+				], ( err, data ) => {
+					if ( err )
+						return res.send( err );
 
-				require( 'readline' ).createInterface( {
-					input: fs.createReadStream( './preguntas/preguntas.csv' )
-				} ).on( 'line', ( linea ) => {
-					let campos = linea.split( ',' );
+					require( 'readline' ).createInterface( {
+						input: fs.createReadStream( './preguntas/preguntas.csv' )
+					} ).on( 'line', ( linea ) => {
+						let campos = linea.split( ',' );
 
-					let catId = "";
-					for ( let i = 0; i < data.length; i++ )
-						if ( data[i].name === campos[1] ) {
-							catId = data[i]._id;
-							break;
-						}
+						let catId = "";
+						for ( let i = 0; i < data.length; i++ )
+							if ( data[i].name === campos[1] ) {
+								catId = data[i]._id;
+								break;
+							}
 
-					if ( catId === "" )
-						return;
+							if ( catId === "" )
+								return;
 
-					let respuestas = campos.splice( 2, 4 );
-					for ( let i = 0; i < respuestas.length; i++ )
-						if ( respuestas[i].includes( '#' ) ) {
-							let temp = respuestas[0];
-							respuestas[0] = respuestas[i];
-							respuestas[i] = temp;
-						}
+							let respuestas = campos.splice( 2, 4 );
+							for ( let i = 0; i < respuestas.length; i++ )
+								if ( respuestas[i].includes( '#' ) ) {
+									let temp = respuestas[0];
+									respuestas[0] = respuestas[i];
+									respuestas[i] = temp;
+								}
 
-					respuestas[0] = respuestas[0].split( "#" )[1];
+								respuestas[0] = respuestas[0].split( "#" )[1];
 
-					let pregunta = new Pregunta( {
-						_id: new mongoose.Types.ObjectId(),
-						pregunta: campos[0],
-						respuestas: respuestas,
-						categoria: catId
-					} );
+								let pregunta = new Pregunta( {
+									_id: new mongoose.Types.ObjectId(),
+									pregunta: campos[0],
+									respuestas: respuestas,
+									categoria: catId
+								} );
 
-					pregunta.save();
+								pregunta.save();
+							} );
 				} );
-			} );
 			res.send( 'Cargando preguntas...' );
 		} );
 	} );
@@ -335,3 +335,28 @@ function error(res, err){
 	console.log(err.message);
 	res.json({Error: err.message});
 }
+
+//luis
+
+exports.PreguntaDuelo = function(req, res){
+	Pregunta.find({}).exec(function(err,preguntas){
+
+		if(err) return res.json({Error: err});
+
+		PreguntasRespondidas.find({$or: [ {ID_usuario: req.body.ID_retador},{ID_usuario: req.body.ID_retado}]})
+		.exec(function(err,respondidas){ 
+			if(err) return res.json({Error: err});
+			if(respondidas.length !== 0){
+				let n = preguntas.length;
+				for(let i=0;i<n;i++){
+					if(preguntas[i]._id !== respondidas[i].ID_pregunta){
+						return res.json({pregunta: preguntas[i]});
+					}
+				}
+			}else{
+				res.json({pregunta: preguntas[0]});
+			}
+		});
+
+	});
+};

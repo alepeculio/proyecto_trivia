@@ -15,5 +15,6 @@ router.post('/crearCategoria', pregunta_controller.categoria_create);
 router.post('/crearPregunta', pregunta_controller.pregunta_create);
 router.get('/nueva', pregunta_controller.pregunta_new);
 router.get('/temp', pregunta_controller.temp);
+router.post('/generarPreguntaDuelo', pregunta_controller.PreguntaDuelo);
 
 module.exports = router;
