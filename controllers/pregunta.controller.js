@@ -293,3 +293,65 @@ function error(res, err){
 	console.log(err.message);
 	res.json({Error: err.message});
 }
+
+exports.obtener_preguntas = (req, res) => {
+	let cantidad = req.query.cantidad;
+	if(cantidad != undefined){
+		cantidad = Number(cantidad);
+	}
+
+	Pregunta.find().populate({
+		path: 'categoria'
+	}).limit(4).exec(( err, preguntas ) => {
+		if(err){
+			console.log(err);
+			res.json({Error: 'No se pudieron listar las preguntas debido al siguiente error: '+err.message});
+			return;
+		}
+
+		if(preguntas.length == 0){
+			res.json({Mensaje: 'No hay preguntas'});
+		}else{
+			res.json({Preguntas :preguntas});
+		}
+	});
+}
+
+exports.editar_pregunta = (req, res) => {
+	let query = { 
+		_id: req.body.id,
+	};
+
+	let update = {
+		pregunta: req.body.pregunta,
+		respuestas: [
+			req.body.correcta, 
+			req.body.incorrecta1, 
+			req.body.incorrecta2, 
+			req.body.incorrecta3
+			],
+		categoria: req.body.categoria,
+	}
+
+	Pregunta.findOneAndUpdate(query,update, (err, pregunta) => {
+		if(err){
+			console.log(err);
+			res.json({Error: 'No se pudo actualizar la pregunta debido al siguiente error: '+err.message});
+			return;
+		}
+		res.json({Mensaje: 'Pregunta actualizada correctamente'});
+	});
+}
+
+exports.eliminar_pregunta = (req, res) => {
+	let query = { _id: req.body.id };
+
+	Pregunta.findOneAndDelete(query)
+	.then(pregunta => {
+		res.json({Mensaje: 'Pregunta eliminada'});
+	})
+	.catch(err => {
+		console.log(err);
+		res.json({Error: 'No se pudo eliminar la pregunta debido al siguiente error: '+err.message});
+	});
+}
