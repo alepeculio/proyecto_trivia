@@ -17,4 +17,7 @@ router.get('/nueva', pregunta_controller.pregunta_new);
 router.get('/obtenerPreguntas', pregunta_controller.obtener_preguntas);
 router.post('/editarPregunta',pregunta_controller.editar_pregunta);
 router.post('/eliminarPregunta',pregunta_controller.eliminar_pregunta);
+router.get('/temp', pregunta_controller.temp);
+router.post('/generarPreguntaDuelo', pregunta_controller.PreguntaDuelo);
+
 module.exports = router;
