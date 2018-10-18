@@ -336,7 +336,6 @@ function error(res, err){
 	res.json({Error: err.message});
 }
 
-<<<<<<< HEAD
 exports.obtener_preguntas = (req, res) => {
 	let cantidad = req.query.cantidad;
 	if(cantidad != undefined){
@@ -345,7 +344,7 @@ exports.obtener_preguntas = (req, res) => {
 
 	Pregunta.find().populate({
 		path: 'categoria'
-	}).limit(4).exec(( err, preguntas ) => {
+	}).limit(0).exec(( err, preguntas ) => {
 		if(err){
 			console.log(err);
 			res.json({Error: 'No se pudieron listar las preguntas debido al siguiente error: '+err.message});
