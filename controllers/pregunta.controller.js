@@ -6,6 +6,7 @@ const PreguntasDiarias = require( '../models/preguntas_diarias.model.js' );
 const Pregunta = require('../models/pregunta.model');
 const Usuario = require('../models/usuario.model');
 const Categoria = require('../models/categoria.model');
+const ManoaMano = require('../models/mano_a_mano.model');
 
 var csv = require( 'csv-express' );
 
@@ -338,25 +339,92 @@ function error(res, err){
 
 //luis
 
-exports.PreguntaDuelo = function(req, res){
+exports.generarPreguntasDuelo = function(req, res){
+
 	Pregunta.find({}).exec(function(err,preguntas){
 
 		if(err) return res.json({Error: err});
 
-		PreguntasRespondidas.find({$or: [ {ID_usuario: req.body.ID_retador},{ID_usuario: req.body.ID_retado}]})
-		.exec(function(err,respondidas){ 
+		let query = {$or:[{ID_usuario:req.body.ID_retador},{ID_usuario:req.body.ID_retado}]};
+
+		PreguntasRespondidas.find(query).exec(function(err,respondidas){
+
 			if(err) return res.json({Error: err});
+
 			if(respondidas.length !== 0){
-				let n = preguntas.length;
+
+				let n = respondidas.length;
+				let resultado = [];
+				let cont = 0;
+
 				for(let i=0;i<n;i++){
+
 					if(preguntas[i]._id !== respondidas[i].ID_pregunta){
-						return res.json({pregunta: preguntas[i]});
+
+						if(cont < 3){
+							resultado.push(preguntas[i]);
+							cont++;
+						}else{
+
+							let query2 = {ID_retador: req.body.ID_retador,ID_retado: req.body.ID_retado};
+
+							let update = {
+								preguntas: [resultado[0]._id,resultado[1]._id,resultado[2]._id]
+							};
+							
+							ManoaMano.findOneAndUpdate(query2,update, (err, usuario) => {
+
+								if(err) return res.json({Error: err});
+
+								console.log("usuario",usuario);
+
+								return res.send(resultado);
+
+							});
+
+
+						}
+
 					}
+
 				}
 			}else{
-				res.json({pregunta: preguntas[0]});
+
+				res.json({Mensaje: 'No hay preguntas para responder'});
 			}
+
+
+		});
+
+
+	});
+}
+
+exports.obtenerPreguntasDuelo = function(req,res){
+
+	let query;
+
+	if(req.body.ID_retador === undefined){
+		query = {ID_retado: req.body.ID_retado, fecha: fechaActual()};
+	}else{
+		query = {ID_retador: req.body.ID_retador, fecha: fechaActual()};
+	}
+
+	ManoaMano.findOne(query).exec(function(err,duelo){
+		if(err) return res.json({Error: err});
+
+		let q = new Object();
+		q.$or = [];
+		q.$or.push({_id:duelo.preguntas[0]});
+		q.$or.push({_id:duelo.preguntas[1]});
+		q.$or.push({_id:duelo.preguntas[2]});
+
+		Pregunta.find(q).exec(function(err,preguntas){
+			if(err) return res.json({Error: err});
+
+			res.send(preguntas);
+
 		});
 
 	});
-};
+}
