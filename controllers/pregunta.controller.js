@@ -6,6 +6,7 @@ const PreguntasDiarias = require( '../models/preguntas_diarias.model.js' );
 const Pregunta = require('../models/pregunta.model');
 const Usuario = require('../models/usuario.model');
 const Categoria = require('../models/categoria.model');
+const ManoaMano = require('../models/mano_a_mano.model');
 
 var csv = require( 'csv-express' );
 
@@ -40,45 +41,45 @@ exports.importar = ( req, res ) => {
 				{ _id: new mongoose.Types.ObjectId(), name: "Ciencia y Tecnología"},
 				{ _id: new mongoose.Types.ObjectId(), name: "Arte y Literatura"},
 				{ _id: new mongoose.Types.ObjectId(), name: "Entretenimiento"},
-			], ( err, data ) => {
-				if ( err )
-					return res.send( err );
+				], ( err, data ) => {
+					if ( err )
+						return res.send( err );
 
-				require( 'readline' ).createInterface( {
-					input: fs.createReadStream( './preguntas/preguntas.csv' )
-				} ).on( 'line', ( linea ) => {
-					let campos = linea.split( ',' );
+					require( 'readline' ).createInterface( {
+						input: fs.createReadStream( './preguntas/preguntas.csv' )
+					} ).on( 'line', ( linea ) => {
+						let campos = linea.split( ',' );
 
-					let catId = "";
-					for ( let i = 0; i < data.length; i++ )
-						if ( data[i].name === campos[1] ) {
-							catId = data[i]._id;
-							break;
-						}
+						let catId = "";
+						for ( let i = 0; i < data.length; i++ )
+							if ( data[i].name === campos[1] ) {
+								catId = data[i]._id;
+								break;
+							}
 
-					if ( catId === "" )
-						return;
+							if ( catId === "" )
+								return;
 
-					let respuestas = campos.splice( 2, 4 );
-					for ( let i = 0; i < respuestas.length; i++ )
-						if ( respuestas[i].includes( '#' ) ) {
-							let temp = respuestas[0];
-							respuestas[0] = respuestas[i];
-							respuestas[i] = temp;
-						}
+							let respuestas = campos.splice( 2, 4 );
+							for ( let i = 0; i < respuestas.length; i++ )
+								if ( respuestas[i].includes( '#' ) ) {
+									let temp = respuestas[0];
+									respuestas[0] = respuestas[i];
+									respuestas[i] = temp;
+								}
 
-					respuestas[0] = respuestas[0].split( "#" )[1];
+								respuestas[0] = respuestas[0].split( "#" )[1];
 
-					let pregunta = new Pregunta( {
-						_id: new mongoose.Types.ObjectId(),
-						pregunta: campos[0],
-						respuestas: respuestas,
-						categoria: catId
-					} );
+								let pregunta = new Pregunta( {
+									_id: new mongoose.Types.ObjectId(),
+									pregunta: campos[0],
+									respuestas: respuestas,
+									categoria: catId
+								} );
 
-					pregunta.save();
+								pregunta.save();
+							} );
 				} );
-			} );
 			res.send( 'Cargando preguntas...' );
 		} );
 	} );
@@ -334,4 +335,156 @@ exports.pregunta_new = function(req,res){
 function error(res, err){
 	console.log(err.message);
 	res.json({Error: err.message});
+}
+
+exports.obtener_preguntas = (req, res) => {
+	let cantidad = req.query.cantidad;
+	if(cantidad != undefined){
+		cantidad = Number(cantidad);
+	}
+
+	Pregunta.find().populate({
+		path: 'categoria'
+	}).limit(0).exec(( err, preguntas ) => {
+		if(err){
+			console.log(err);
+			res.json({Error: 'No se pudieron listar las preguntas debido al siguiente error: '+err.message});
+			return;
+		}
+
+		if(preguntas.length == 0){
+			res.json({Mensaje: 'No hay preguntas'});
+		}else{
+			res.json({Preguntas :preguntas});
+		}
+	});
+}
+
+exports.editar_pregunta = (req, res) => {
+	let query = { 
+		_id: req.body.id,
+	};
+
+	let update = {
+		pregunta: req.body.pregunta,
+		respuestas: [
+			req.body.correcta, 
+			req.body.incorrecta1, 
+			req.body.incorrecta2, 
+			req.body.incorrecta3
+			],
+		categoria: req.body.categoria,
+	}
+
+	Pregunta.findOneAndUpdate(query,update, (err, pregunta) => {
+		if(err){
+			console.log(err);
+			res.json({Error: 'No se pudo actualizar la pregunta debido al siguiente error: '+err.message});
+			return;
+		}
+		res.json({Mensaje: 'Pregunta actualizada correctamente'});
+	});
+}
+
+exports.eliminar_pregunta = (req, res) => {
+	let query = { _id: req.body.id };
+
+	Pregunta.findOneAndDelete(query)
+	.then(pregunta => {
+		res.json({Mensaje: 'Pregunta eliminada'});
+	})
+	.catch(err => {
+		console.log(err);
+		res.json({Error: 'No se pudo eliminar la pregunta debido al siguiente error: '+err.message});
+	});
+}
+
+exports.generarPreguntasDuelo = function(req, res){
+
+	Pregunta.find({}).exec(function(err,preguntas){
+
+		if(err) return res.json({Error: err});
+
+		let query = {$or:[{ID_usuario:req.body.ID_retador},{ID_usuario:req.body.ID_retado}]};
+
+		PreguntasRespondidas.find(query).exec(function(err,respondidas){
+
+			if(err) return res.json({Error: err});
+
+			if(respondidas.length !== 0){
+
+				let n = respondidas.length;
+				let resultado = [];
+				let cont = 0;
+
+				for(let i=0;i<n;i++){
+
+					if(preguntas[i]._id !== respondidas[i].ID_pregunta){
+
+						if(cont < 3){
+							resultado.push(preguntas[i]);
+							cont++;
+						}else{
+
+							let query2 = {ID_retador: req.body.ID_retador,ID_retado: req.body.ID_retado};
+
+							let update = {
+								preguntas: [resultado[0]._id,resultado[1]._id,resultado[2]._id]
+							};
+							
+							ManoaMano.findOneAndUpdate(query2,update, (err, usuario) => {
+
+								if(err) return res.json({Error: err});
+
+								console.log("usuario",usuario);
+
+								return res.send(resultado);
+
+							});
+
+
+						}
+
+					}
+
+				}
+			}else{
+
+				res.json({Mensaje: 'No hay preguntas para responder'});
+			}
+
+
+		});
+
+
+	});
+}
+
+exports.obtenerPreguntasDuelo = function(req,res){
+
+	let query;
+
+	if(req.body.ID_retador === undefined){
+		query = {ID_retado: req.body.ID_retado, fecha: fechaActual()};
+	}else{
+		query = {ID_retador: req.body.ID_retador, fecha: fechaActual()};
+	}
+
+	ManoaMano.findOne(query).exec(function(err,duelo){
+		if(err) return res.json({Error: err});
+
+		let q = new Object();
+		q.$or = [];
+		q.$or.push({_id:duelo.preguntas[0]});
+		q.$or.push({_id:duelo.preguntas[1]});
+		q.$or.push({_id:duelo.preguntas[2]});
+
+		Pregunta.find(q).exec(function(err,preguntas){
+			if(err) return res.json({Error: err});
+
+			res.send(preguntas);
+
+		});
+
+	});
 }

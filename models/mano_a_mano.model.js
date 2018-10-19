@@ -25,8 +25,14 @@ var ManoaManoSchema = new Schema( {
 		type: Number
 	},
 	tiempo_retador: {
-		type: Date,
-		default: Date.now
+		type: Number
+	},
+	fecha:{
+		type: String,
+		required: true
+	},
+	preguntas:{
+		type: Array
 	}
 } );
 

@@ -206,6 +206,11 @@ exports.retos = (req, res) => {
 	res.render('retar.ejs');
 }
 
+function fechaActual() {
+	let hoy = new Date();
+	return hoy.getDate() + '-' + ( hoy.getMonth() + 1 ) + '-' + hoy.getFullYear();
+}
+
 exports.retar = (req,res) => {
 	let mano_a_mano = new ManoaMano({
 		_id: new mongoose.Types.ObjectId(),
@@ -214,22 +219,37 @@ exports.retar = (req,res) => {
 		ID_ganador: null,
 		ID_perdedor: null,
 		cant_correcta_retador: "",
-		tiempo_retador: null
+		tiempo_retador: null,
+		fecha: fechaActual(),
+		preguntas: null
 	});
 
 	mano_a_mano.save( (err) => {
 		if(err){
-			res.send(JSON.stringify({Error: 'No se pudo retar al usuario debido al siguiente error'}));
+			res.send(JSON.stringify({Error: 'No se pudo retar al usuario debido al siguiente error'+err}));
 		}else{
-			res.send(JSON.stringify({Mensaje: 'Usuario retado correctamente'}));
+			let usuario = req.body.usuario;
+
+			Usuario.findOneAndUpdate({_id: usuario}, {$inc: {mmrestantes: -1}}, (err,usuario) => {
+				if(err) return res.json({Error: err});
+				res.send(JSON.stringify({Mensaje: 'Usuario retado correctamente'}));
+			});
 		}
 	});
 }
 
 exports.cancelarReto = (req,res) => {
-	ManoaMano.findOneAndDelete({ID_retador: req.body.ID_retador , ID_retado: req.body.ID_retado} , (err,duelo) => {
+	let usuario = {_id:req.body.usuario};
+	let query = {ID_retador: req.body.ID_retador , ID_retado: req.body.ID_retado}; 
+	ManoaMano.findOneAndDelete(query , (err,duelo) => {
 		if(err) res.send(JSON.stringify({Error: 'No se pudo cancelar el reto'}));
-		res.send(JSON.stringify({Mensaje: 'El duelo ha sido cancelado'}));
+
+		Usuario.findOneAndUpdate(tipo,{$inc:{mmrestantes:1}},(err,usuario) =>{
+			if(err) return res.json({Error: err});
+
+			res.send(JSON.stringify({Mensaje: 'El duelo ha sido cancelado'}));
+		});
+		
 	});
 }
 
@@ -353,19 +373,55 @@ exports.usuariosSinRetar = (req,res) => {
 }
 
 exports.comenzarDuelo = (req,res) => {
+	let query = {ID_retador: req.body.ID_retador,ID_retado: ID_retado};
 
+	let update = {cant_correcta_retador: req.body.cant_correctas,tiempo_retador: req.body.tiempo};
+
+	ManoaMano.findOneAndUpdate(query,update, (err,duelo) => {
+		if(err) return res.json({Error: err});
+
+		res.json({Mensaje: 'OK'});
+
+	});
 }
 
 exports.finalizarDuelo = (req,res) => {
-/* 
-ManoMano
-_id:
-ID_retador
-ID_retado
-ID_ganador
-ID_perdedor
-cant_correctar_retador
-tiempo_retador
-*/
+	let usuario = req.body.usuario;
+	let correctas = req.body.cant_correctas;
+	let tiempo = req.body.tiempo;
+	let query = {ID_retador: req.body.ID_retador,ID_retado: ID_retado};
+
+	ManoaMano.findOne(query).exec(function(err,duelo){
+		if(err) return res.json({Error: err});
+
+		if(correctas < duelo.cant_correcta_retador){
+
+			Usuario.findOneAndUpdate({_id: usuario}, {$inc: {puntaje: -1}}, (err,usuario) => {
+				if(err) return res.json({Error: err});
+				return res.json("PERDISTE");
+			});
+			
+		}else if(correctas > duelo.cant_correcta_retador){
+			Usuario.findOneAndUpdate({_id: usuario}, {$inc: {puntaje: 3}}, (err,usuario) => {
+				if(err) return res.json({Error: err});
+				return res.json("GANASTE");
+			});
+			
+		}else{
+
+			if(tiempo  < duelo.tiempo_retador){
+				Usuario.findOneAndUpdate({_id: usuario}, {$inc: {puntaje: 3}}, (err,usuario) => {
+					if(err) return res.json({Error: err});
+					return res.json("GANASTE POR TIEMPO");
+				});
+			}else{
+				Usuario.findOneAndUpdate({_id: usuario}, {$inc: {puntaje: -1}}, (err,usuario) => {
+					if(err) return res.json({Error: err});
+					return res.json("PERDISTE POR TIEMPO");
+				});
+			}
+		}
+
+	});
 
 }
