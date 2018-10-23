@@ -438,7 +438,7 @@ exports.generarPreguntasDuelo = function(req, res){
 								preguntas: [resultado[0]._id,resultado[1]._id,resultado[2]._id]
 							});
 
-							ManoaMano.save((err, usuario) => {
+							ManoaMano.save( (err) => {
 
 								if(err) return res.json({Error: err});
 
