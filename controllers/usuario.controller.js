@@ -211,6 +211,7 @@ function fechaActual() {
 	return hoy.getDate() + '-' + ( hoy.getMonth() + 1 ) + '-' + hoy.getFullYear();
 }
 
+/*
 exports.retar = (req,res) => {
 	let mano_a_mano = new ManoaMano({
 		_id: new mongoose.Types.ObjectId(),
@@ -236,15 +237,14 @@ exports.retar = (req,res) => {
 			});
 		}
 	});
-}
+}*/
 
 exports.cancelarReto = (req,res) => {
-	let usuario = {_id:req.body.usuario};
 	let query = {ID_retador: req.body.ID_retador , ID_retado: req.body.ID_retado}; 
 	ManoaMano.findOneAndDelete(query , (err,duelo) => {
 		if(err) res.send(JSON.stringify({Error: 'No se pudo cancelar el reto'}));
 
-		Usuario.findOneAndUpdate(tipo,{$inc:{mmrestantes:1}},(err,usuario) =>{
+		Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc:{mmrestantes:1}},(err,usuario) =>{
 			if(err) return res.json({Error: err});
 
 			res.send(JSON.stringify({Mensaje: 'El duelo ha sido cancelado'}));

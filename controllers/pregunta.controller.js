@@ -411,10 +411,12 @@ exports.generarPreguntasDuelo = function(req, res){
 
 			if(err) return res.json({Error: err});
 
+			let resultado = [];
+
 			if(respondidas.length !== 0){
 
 				let n = respondidas.length;
-				let resultado = [];
+
 				let cont = 0;
 
 				for(let i=0;i<n;i++){
@@ -446,21 +448,13 @@ exports.generarPreguntasDuelo = function(req, res){
 
 							});
 
-
 						}
 
 					}
 
 				}
-			}else{
-
-				res.json({Mensaje: 'No hay preguntas para responder'});
 			}
-
-
 		});
-
-
 	});
 }
 
