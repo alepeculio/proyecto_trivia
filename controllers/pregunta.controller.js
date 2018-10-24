@@ -368,11 +368,11 @@ exports.editar_pregunta = (req, res) => {
 	let update = {
 		pregunta: req.body.pregunta,
 		respuestas: [
-			req.body.correcta, 
-			req.body.incorrecta1, 
-			req.body.incorrecta2, 
-			req.body.incorrecta3
-			],
+		req.body.correcta, 
+		req.body.incorrecta1, 
+		req.body.incorrecta2, 
+		req.body.incorrecta3
+		],
 		categoria: req.body.categoria,
 	}
 
@@ -426,17 +426,21 @@ exports.generarPreguntasDuelo = function(req, res){
 							cont++;
 						}else{
 
-							let query2 = {ID_retador: req.body.ID_retador,ID_retado: req.body.ID_retado};
-
-							let update = {
+							let mano_a_mano = new ManoaMano({
+								_id: new mongoose.Types.ObjectId(),
+								ID_retador: req.body.ID_retador,
+								ID_retado: req.body.ID_retado,
+								ID_ganador: null,
+								ID_perdedor: null,
+								cant_correcta_retador: "",
+								tiempo_retador: null,
+								fecha: fechaActual(),
 								preguntas: [resultado[0]._id,resultado[1]._id,resultado[2]._id]
-							};
-							
-							ManoaMano.findOneAndUpdate(query2,update, (err, usuario) => {
+							});
+
+							ManoaMano.save((err, usuario) => {
 
 								if(err) return res.json({Error: err});
-
-								console.log("usuario",usuario);
 
 								return res.send(resultado);
 
