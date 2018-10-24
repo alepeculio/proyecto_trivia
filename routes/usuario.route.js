@@ -16,7 +16,6 @@ router.post('/eliminar', usuario_controller.eliminar);
 router.post('/iniciarSesion', usuario_controller.iniciarSesion);
 
 //luis
-router.post('/retar', usuario_controller.retar);
 router.get('/retos', usuario_controller.retos);
 router.post('/cancelarReto', usuario_controller.cancelarReto);
 router.get('/listarRetos', usuario_controller.listarRetos);
