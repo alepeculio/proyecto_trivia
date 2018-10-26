@@ -211,40 +211,12 @@ function fechaActual() {
 	return hoy.getDate() + '-' + ( hoy.getMonth() + 1 ) + '-' + hoy.getFullYear();
 }
 
-exports.retar = (req,res) => {
-	let mano_a_mano = new ManoaMano({
-		_id: new mongoose.Types.ObjectId(),
-		ID_retador: req.body.ID_retador,
-		ID_retado: req.body.ID_retado,
-		ID_ganador: null,
-		ID_perdedor: null,
-		cant_correcta_retador: "",
-		tiempo_retador: null,
-		fecha: fechaActual(),
-		preguntas: null
-	});
-
-	mano_a_mano.save( (err) => {
-		if(err){
-			res.send(JSON.stringify({Error: 'No se pudo retar al usuario debido al siguiente error'+err}));
-		}else{
-			let usuario = req.body.usuario;
-
-			Usuario.findOneAndUpdate({_id: usuario}, {$inc: {mmrestantes: -1}}, (err,usuario) => {
-				if(err) return res.json({Error: err});
-				res.send(JSON.stringify({Mensaje: 'Usuario retado correctamente'}));
-			});
-		}
-	});
-}
-
 exports.cancelarReto = (req,res) => {
-	let usuario = {_id:req.body.usuario};
 	let query = {ID_retador: req.body.ID_retador , ID_retado: req.body.ID_retado}; 
 	ManoaMano.findOneAndDelete(query , (err,duelo) => {
 		if(err) res.send(JSON.stringify({Error: 'No se pudo cancelar el reto'}));
 
-		Usuario.findOneAndUpdate(tipo,{$inc:{mmrestantes:1}},(err,usuario) =>{
+		Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc:{mmrestantes:1}},(err,usuario) =>{
 			if(err) return res.json({Error: err});
 
 			res.send(JSON.stringify({Mensaje: 'El duelo ha sido cancelado'}));
