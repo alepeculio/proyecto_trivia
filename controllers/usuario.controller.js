@@ -361,7 +361,7 @@ exports.finalizarDuelo = (req,res) => {
 	let usuario = req.body.usuario;
 	let correctas = req.body.cant_correctas;
 	let tiempo = req.body.tiempo;
-	let query = {ID_retador: req.body.ID_retador,ID_retado: ID_retado};
+	let query = {ID_retador: req.body.ID_retador,ID_retado: req.body.ID_retado};
 
 	ManoaMano.findOne(query).exec(function(err,duelo){
 		if(err) return res.json({Error: err});
