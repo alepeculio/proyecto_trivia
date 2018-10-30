@@ -352,7 +352,7 @@ exports.comenzarDuelo = (req,res) => {
 	ManoaMano.findOneAndUpdate(query,update, (err,duelo) => {
 		if(err) return res.json({Error: err});
 
-		res.json({Mensaje: 'OK'});
+		else res.json({Mensaje: 'OK'});
 
 	});
 }
