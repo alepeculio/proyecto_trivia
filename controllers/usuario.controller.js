@@ -291,7 +291,7 @@ exports.listarRetosPropios = (req,res) => {
 exports.usuariosSinRetar = (req,res) => {
 	let retados = [];
 
-	ManoaMano.find({ $or: [ { ID_retador: req.query.id } , { ID_retado: req.query.id } ] })
+	ManoaMano.find({ $or: [ { ID_retador: req.query.id } , { ID_retado: req.query.id } ] , ID_ganador: null  } ) 
 	.exec(function(err,result){
 		res.statusCode = 200;
 		res.setHeader('Content-Type','application/json');
