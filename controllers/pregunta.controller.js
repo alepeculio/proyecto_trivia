@@ -471,62 +471,13 @@ exports.generarPreguntasDuelo = function(req, res){
 
 		});
 
-
-			/*
-			
-			
-
-			let resultado = [];
-
-			if(respondidas.length !== 0){
-
-				let n = respondidas.length;
-
-				let cont = 0;
-
-				for(let i=0;i<n;i++){
-
-					if(preguntas[i]._id !== respondidas[i].ID_pregunta){
-
-						if(cont < 3){
-							resultado.push(preguntas[i]);
-							cont++;
-						}
-
-						if(cont == 3){
-							let mano_a_mano = new ManoaMano({
-								_id: new mongoose.Types.ObjectId(),
-								ID_retador: req.body.ID_retador,
-								ID_retado: req.body.ID_retado,
-								ID_ganador: null,
-								ID_perdedor: null,
-								cant_correcta_retador: "",
-								tiempo_retador: null,
-								fecha: fechaActual(),
-								preguntas: [resultado[0]._id,resultado[1]._id,resultado[2]._id]
-							});
-
-							mano_a_mano.save( (err) => {
-								if(err) return res.json({Error: err});
-								return res.send(resultado);
-
-							});
-							break;
-						}
-
-					}
-
-				}
-			}*/
-		});
+	});
 	
 }
 
 exports.obtenerPreguntasDuelo = function(req,res){
 
 	let query;
-
-	
 
 	if(req.body.ID_retador === undefined){
 		query = {ID_retado: req.body.ID_retado, ID_retador: req.body.ID_retador,ID_ganador: null};
