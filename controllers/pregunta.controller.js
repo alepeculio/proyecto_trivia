@@ -467,10 +467,12 @@ exports.obtenerPreguntasDuelo = function(req,res){
 
 	let query;
 
+	
+
 	if(req.body.ID_retador === undefined){
-		query = {ID_retado: req.body.ID_retado, fecha: fechaActual()};
+		query = {ID_retado: req.body.ID_retado, ID_retador: req.body.ID_retador,ID_ganador: null};
 	}else{
-		query = {ID_retador: req.body.ID_retador, fecha: fechaActual()};
+		query = {ID_retador: req.body.ID_retador, ID_retador: req.body.ID_retador, ID_ganador: null};
 	}
 
 	ManoaMano.findOne(query).exec(function(err,duelo){
