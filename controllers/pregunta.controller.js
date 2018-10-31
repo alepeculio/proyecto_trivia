@@ -407,15 +407,74 @@ exports.eliminar_pregunta = (req, res) => {
 
 exports.generarPreguntasDuelo = function(req, res){
 
-	Pregunta.find({}).exec(function(err,preguntas){
+	let query = {$or:[{ID_usuario:req.body.ID_retador},{ID_usuario:req.body.ID_retado}]};
+
+	let coso = new Object();
+
+	coso._id = {};
+
+	coso._id.$nin = [];
+
+	//{ _id: { $not: { $eq: req.query.id } } 
+
+	PreguntasRespondidas.find(query).exec(function(err,respondidas){
 
 		if(err) return res.json({Error: err});
 
-		let query = {$or:[{ID_usuario:req.body.ID_retador},{ID_usuario:req.body.ID_retado}]};
+		if(respondidas.length !== 0){
+			let n = respondidas.length;
+			for(let i=0; i < n; i++){
+				coso._id.$nin.push(respondidas[i]._id);
+			}
+		}
 
-		PreguntasRespondidas.find(query).exec(function(err,respondidas){
+		ManoaMano.find().exec(function(err,duelos){
+			if(err) return res.json({Error:err});
 
-			if(err) return res.json({Error: err});
+			if(duelos.length !== 0){
+				let j = duelos.length;
+				for(let i=0;i<j;i++){
+					coso._id.$nin.push(duelos[i].preguntas[0]);
+					coso._id.$nin.push(duelos[i].preguntas[1]);
+					coso._id.$nin.push(duelos[i].preguntas[2]);
+				}
+
+				console.log("SIZE:", coso.length);
+				console.log("COSO", coso);
+			}
+
+			Pregunta.find(coso).limit(3).exec(function(err,preguntas){
+
+				if(err) return res.json({Error: err});
+
+
+				let mano_a_mano = new ManoaMano({
+					_id: new mongoose.Types.ObjectId(),
+					ID_retador: req.body.ID_retador,
+					ID_retado: req.body.ID_retado,
+					ID_ganador: null,
+					ID_perdedor: null,
+					cant_correcta_retador: "",
+					tiempo_retador: null,
+					fecha: fechaActual(),
+					preguntas: [preguntas[0]._id,preguntas[1]._id,preguntas[2]._id]
+				});
+
+				mano_a_mano.save( (err) => {
+					if(err) return res.json({Error: err});
+					return res.send(preguntas);
+
+				});
+
+			});
+
+
+		});
+
+
+			/*
+			
+			
 
 			let resultado = [];
 
@@ -458,9 +517,9 @@ exports.generarPreguntasDuelo = function(req, res){
 					}
 
 				}
-			}
+			}*/
 		});
-	});
+	
 }
 
 exports.obtenerPreguntasDuelo = function(req,res){
