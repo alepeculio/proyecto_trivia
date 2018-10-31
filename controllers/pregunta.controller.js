@@ -415,7 +415,6 @@ exports.generarPreguntasDuelo = function(req, res){
 
 	coso._id.$nin = [];
 
-	//{ _id: { $not: { $eq: req.query.id } } 
 
 	PreguntasRespondidas.find(query).exec(function(err,respondidas){
 
@@ -439,8 +438,6 @@ exports.generarPreguntasDuelo = function(req, res){
 					coso._id.$nin.push(duelos[i].preguntas[2]);
 				}
 
-				console.log("SIZE:", coso.length);
-				console.log("COSO", coso);
 			}
 
 			Pregunta.find(coso).limit(3).exec(function(err,preguntas){
@@ -472,6 +469,7 @@ exports.generarPreguntasDuelo = function(req, res){
 		});
 
 	});
+
 	
 }
 
