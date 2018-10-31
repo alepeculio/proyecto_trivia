@@ -345,14 +345,14 @@ exports.usuariosSinRetar = (req,res) => {
 }
 
 exports.comenzarDuelo = (req,res) => {
-	let query = {ID_retador: req.body.ID_retador,ID_retado: ID_retado};
+	let query = {ID_retador: req.body.ID_retador,ID_retado: req.body.ID_retado};
 
 	let update = {cant_correcta_retador: req.body.cant_correctas,tiempo_retador: req.body.tiempo};
 
 	ManoaMano.findOneAndUpdate(query,update, (err,duelo) => {
 		if(err) return res.json({Error: err});
 
-		res.json({Mensaje: 'OK'});
+		else return res.json({Mensaje: 'OK'});
 
 	});
 }
