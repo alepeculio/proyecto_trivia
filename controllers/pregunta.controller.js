@@ -432,8 +432,10 @@ exports.generarPreguntasDuelo = function(req, res){
 						if(cont < 3){
 							resultado.push(preguntas[i]);
 							cont++;
-						}else{
 
+						}
+
+						if(cont == 2){
 							let mano_a_mano = new ManoaMano({
 								_id: new mongoose.Types.ObjectId(),
 								ID_retador: req.body.ID_retador,
@@ -447,12 +449,13 @@ exports.generarPreguntasDuelo = function(req, res){
 							});
 
 							mano_a_mano.save( (err) => {
-
 								if(err) return res.json({Error: err});
 
 								return res.send(resultado);
 
 							});
+
+							break;
 
 						}
 
