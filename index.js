@@ -31,6 +31,6 @@ app.use('/css', express.static(__dirname + '/views/css'));
 app.use('/img', express.static(__dirname + '/views/img'));
 
 
-app.listen(port, () => {
+app.listen( process.env.PORT || port, () => {
 	console.log('Servidor iniciado');
 });
