@@ -296,7 +296,7 @@ exports.usuariosSinRetar = (req,res) => {
 	let retados = [];
 
 
-	ManoaMano.find({ $or: [ { ID_retador: req.query.id } , { ID_retado: req.query.id } ] , ID_ganador: null  } ).exec(function(err,result){
+	ManoaMano.find({ $or: [ { ID_retador: req.query.id } , { ID_retado: req.query.id } ] , ID_ganador: null  }).exec(function(err,result){
 		res.statusCode = 200;
 		res.setHeader('Content-Type','application/json');
 		if(result.length == 0){
@@ -333,7 +333,7 @@ exports.usuariosSinRetar = (req,res) => {
 					coso._id.$nin.push(retados[i]);
 				}
 
-				Usuario.find(coso)
+				Usuario.find(coso,null,{sort:{puntaje: -1}})
 				.exec(function(error, usus){ 
 					if(error) console.log(error);
 					let usuarios = [];
@@ -362,7 +362,6 @@ exports.comenzarDuelo = (req,res) => {
 }
 
 exports.finalizarDuelo = (req,res) => {
-	let usuario = req.body.usuario;
 	let correctas = req.body.cant_correctas;
 	let tiempo = req.body.tiempo;
 	let query = {ID_retador: req.body.ID_retador,ID_retado: req.body.ID_retado, ID_ganador: null};
@@ -371,22 +370,24 @@ exports.finalizarDuelo = (req,res) => {
 		if(err) return res.json({Error: err});
 
 		if(correctas < duelo.cant_correcta_retador){
-
-			Usuario.findOneAndUpdate({_id: usuario}, {$inc: {puntaje: -1}}, (err,usuario) => {
+			//gano el retador
+			Usuario.findOneAndUpdate({_id: req.body.ID_retador}, {$inc: {puntaje: 3,mmrestantes: -1}}, (err,usuario) => {
 				if(err) return res.json({Error: err});
-				
+
 				let update = {
 					ID_ganador: duelo.ID_retador,ID_perdedor: duelo.ID_retado
 				};
 
 				ManoaMano.findOneAndUpdate({_id: duelo._id},update,(err,duelo) => {
 					if(err) return res.json({Error:err});
-					return res.json("PERDISTE");
+
+					return res.json("PERDISTE");	
 				});
 			});
-			
+
 		}else if(correctas > duelo.cant_correcta_retador){
-			Usuario.findOneAndUpdate({_id: usuario}, {$inc: {puntaje: 3}}, (err,usuario) => {
+			//gano el retado
+			Usuario.findOneAndUpdate({_id: req.body.ID_retado}, {$inc: {puntaje: 3}}, (err,usuario) => {
 				if(err) return res.json({Error: err});
 
 				let update2 = {
@@ -396,14 +397,20 @@ exports.finalizarDuelo = (req,res) => {
 
 				ManoaMano.findOneAndUpdate({_id: duelo._id}, update2, (err,duelo) =>{
 					if(err) return res.json({Error:err});
-					return res.json("GANASTE");
+
+					Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc: {mmrestantes: -1}}, (err,usuario) => {
+						if(err) return res.json({Error:err});
+
+						return res.json("GANASTE");
+					});
 				});
 			});
-			
+
 		}else{
 
 			if(tiempo  < duelo.tiempo_retador){
-				Usuario.findOneAndUpdate({_id: usuario}, {$inc: {puntaje: 3}}, (err,usuario) => {
+				//gano el retado
+				Usuario.findOneAndUpdate({_id: req.body.ID_retado}, {$inc: {puntaje: 3}}, (err,usuario) => {
 					if(err) return res.json({Error: err});
 
 					let update3 = {
@@ -414,12 +421,16 @@ exports.finalizarDuelo = (req,res) => {
 					ManoaMano.findOneAndUpdate({_id: duelo._id}, update3, (err,duelo) =>{
 						if(err) return res.json({Error: err});
 
-						return res.json("GANASTE"); //por tiempo
+						Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc: {mmrestantes: -1 }}, (err,usuario) =>{
+							if(err) return res.json({Error: err});
 
+							return res.json("GANASTE"); //por tiempo
+						});
 					});
 				});
 			}else{
-				Usuario.findOneAndUpdate({_id: usuario}, {$inc: {puntaje: -1}}, (err,usuario) => {
+				//gano el retador
+				Usuario.findOneAndUpdate({_id: req.body.ID_retador}, {$inc: {puntaje: 3, mmrestantes: -1}}, (err,usuario) => {
 					if(err) return res.json({Error: err});
 
 					let update4 = {
@@ -431,8 +442,6 @@ exports.finalizarDuelo = (req,res) => {
 
 						return res.json("PERDISTE"); //por tiempo
 					});
-
-					
 				});
 			}
 		}
