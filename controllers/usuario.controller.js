@@ -228,10 +228,11 @@ exports.cancelarReto = (req,res) => {
 exports.listarRetos = (req,res) => {
 	ManoaMano.find({ID_retado: req.query.id, ID_ganador: null})
 	.exec(function(err,duels){
-		res.statusCode = 200;
-		res.setHeader('Content-Type','application/json');
+
+		if(err) return res.json({Error: err});
+
 		if(duels.length == 0){
-			res.write(JSON.stringify({Mensaje: 'No hay duelos'}));
+			res.json({Mensaje: 'No hay duelos'});
 		}else{
 			let coso = new Object();
 			coso._id = {};
@@ -240,22 +241,25 @@ exports.listarRetos = (req,res) => {
 				coso._id.$in.push(d.ID_retador);
 			}
 			Usuario.find(coso).exec(function(err, usuarios){
-				if(err) console.log(err);
+				if(err) return res.json({Error: err});
 
 				let usus = [];
 
-				if(usuarios.length != 0){
+				if(usuarios.length == 0){
+					return res.json({Mensaje: 'No hay duelos'});
+				}else{
 					for(u of usuarios){
 						usus.push(getUser(u));
 					}
 				}
-				res.json({'duelos':usus});
+				return res.json({'duelos':usus});
 			});
 
 		}
 	});
 }
 
+//sin uso
 exports.listarRetosPropios = (req,res) => {
 	ManoaMano.find({ID_retador: req.query.id, ID_ganador: null})
 	.exec(function(err,duels){
@@ -296,7 +300,7 @@ exports.usuariosSinRetar = (req,res) => {
 		res.statusCode = 200;
 		res.setHeader('Content-Type','application/json');
 		if(result.length == 0){
-			Usuario.find({ _id: { $not: { $eq: req.query.id } } }).exec((err, users)  => {
+			Usuario.find({ _id: { $not: { $eq: req.query.id } } , tipo: { $not: { $eq: "Admin" } } }).exec((err, users)  => {
 				if(err){
 					console.log(err);
 					res.json({Error: 'No se pudieron listar los usuarios debido al siguiente error: '+err.message});
