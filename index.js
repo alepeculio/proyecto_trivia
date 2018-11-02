@@ -34,3 +34,36 @@ app.use('/img', express.static(__dirname + '/views/img'));
 app.listen( process.env.PORT || port, () => {
 	console.log('Servidor iniciado');
 });
+
+const io = require( 'socket.io' )();
+
+io.on( 'connection', ( cliente ) => {
+	console.log( "Cliente conectado" );
+} );
+
+setInterval( () => {
+	io.emit( 'ranking', [
+	{
+		nombre: 'Jorge',
+		puntaje: '10'
+	},
+	{
+		nombre: 'Brian',
+		puntaje: '9'
+	},
+	{
+		nombre: 'Ale',
+		puntaje: '8'
+	},
+	{
+		nombre: 'Luis',
+		puntaje: '7'
+	},
+	{
+		nombre: 'Lucas',
+		puntaje: '6'
+	}
+	] );
+}, 1000 );
+
+io.listen( 8000 );
