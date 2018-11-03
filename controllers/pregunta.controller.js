@@ -426,9 +426,9 @@ exports.generarPreguntasDuelo = function(req, res){
 				coso._id.$nin.push(respondidas[i]._id);
 			}
 
-			
+			let query2 = {$or:[{ID_retador: req.body.ID_retador},{ID_retado: req.body.ID_retador},{ID_retador: req.body.ID_retado},{ID_retado: req.body.ID_retado}]};
 
-			ManoaMano.find().exec(function(err,duelos){
+			ManoaMano.find(query2).exec(function(err,duelos){
 				if(err) return res.json({Error:err});
 
 				if(duelos.length !== 0){
@@ -459,10 +459,13 @@ exports.generarPreguntasDuelo = function(req, res){
 
 						mano_a_mano.save( (err) => {
 							if(err) return res.json({Error: err});
-							return res.send(preguntas);
 
+							Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc: {mmrestantes: -1}}, (err,usuario) =>{
+								if(err) return res.json({Error:err});
+
+								return res.send(preguntas);
+							});		
 						});
-
 					});
 
 				}
@@ -477,13 +480,8 @@ exports.generarPreguntasDuelo = function(req, res){
 
 exports.obtenerPreguntasDuelo = function(req,res){
 
-	let query;
-
-	if(req.body.ID_retador === undefined){
-		query = {ID_retado: req.body.ID_retado, ID_retador: req.body.ID_retador,ID_ganador: null};
-	}else{
-		query = {ID_retador: req.body.ID_retador, ID_retador: req.body.ID_retador, ID_ganador: null};
-	}
+	let query = {ID_retador: req.body.ID_retador, ID_retado: req.body.ID_retado, ID_ganador: null};
+	
 
 	ManoaMano.findOne(query).exec(function(err,duelo){
 		if(err) return res.json({Error: err});
@@ -497,8 +495,7 @@ exports.obtenerPreguntasDuelo = function(req,res){
 		Pregunta.find(q).exec(function(err,preguntas){
 			if(err) return res.json({Error: err});
 
-			res.send(preguntas);
-
+			return res.send(preguntas);
 		});
 
 	});
