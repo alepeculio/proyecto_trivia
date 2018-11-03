@@ -41,8 +41,15 @@ io.on( 'connection', ( cliente ) => {
 	console.log( "Cliente conectado" );
 } );
 
+let i = 0;
+
 setInterval( () => {
-	io.emit( 'ranking', [
+	i++;
+	io.emit( 'mensaje', {
+		titulo: 'Titulo',
+		contenido: 'mensaje ' + i
+	} );
+	/*io.emit( 'ranking', [
 	{
 		nombre: 'Jorge',
 		puntaje: '10'
@@ -63,7 +70,7 @@ setInterval( () => {
 		nombre: 'Lucas',
 		puntaje: '6'
 	}
-	] );
-}, 1000 );
+	] );*/
+}, 10000 );
 
 io.listen( 8000 );
