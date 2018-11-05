@@ -384,6 +384,10 @@ exports.finalizarDuelo = (req,res) => {
 					Usuario.findOneAndUpdate({_id: req.body.ID_retado},{$inc: {puntaje: -1}}, (err,usuario) =>{
 						if(err) return res.json({Error:err});
 
+						// Perdio retado
+						mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste a ...' );
+						mensaje( req.body.ID_retado, 'Perdiste', 'Perdisto contra ...' );
+
 						return res.json("PERDISTE");	
 					});	
 				});
@@ -405,6 +409,10 @@ exports.finalizarDuelo = (req,res) => {
 					Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc:{puntaje: -1}}, (err,usuario) => {
 						if(err) return res.json({Error:err});
 
+						// Gano retado
+						mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste a ...' );
+						mensaje( req.body.ID_retador, 'Perdiste', 'Perdisto contra ...' );
+
 						return res.json("GANASTE");
 					});
 				});
@@ -425,6 +433,10 @@ exports.finalizarDuelo = (req,res) => {
 					ManoaMano.findOneAndUpdate({_id: duelo._id}, update3, (err,duelo) =>{
 						if(err) return res.json({Error: err});
 
+						// Gano el retado
+						mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste por tiempo a ...' );
+						mensaje( req.body.ID_retador, 'Perdiste', 'Perdisto por tiempo contra ...' );
+
 						return res.json("GANASTE"); //por tiempo
 					});
 				});
@@ -444,6 +456,10 @@ exports.finalizarDuelo = (req,res) => {
 						Usuario.findOneAndUpdate({_id: req.body.ID_retado},{$inc: {puntaje: -1 }}, (err,usuario) =>{
 							if(err) return res.json({Error: err});
 
+							// Perdio el retado
+							mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste por tiempo a ...' );
+							mensaje( req.body.ID_retado, 'Perdiste', 'Perdisto por tiempo contra ...' );
+
 							return res.json("PERDISTE"); //por tiempo
 						});
 					});
@@ -458,6 +474,10 @@ exports.finalizarDuelo = (req,res) => {
 						Usuario.findOneAndUpdate({_id: req.body.ID_retador}, {$inc: {mmrestantes: 1}}, (err,usuario) => {
 							if(err) return res.json({Error:err});
 
+							// Empataron
+							mensaje( req.body.ID_retador, 'Empate', 'Empataron con ...' );
+							mensaje( req.body.ID_retado, 'Empate', 'Empataron con ...' );
+
 							return res.json("EMPATE");
 						});
 					});
@@ -467,3 +487,45 @@ exports.finalizarDuelo = (req,res) => {
 		});
 
 }
+
+const io = require( 'socket.io' )();
+
+let usuarios = [];
+
+io.on( 'connection', ( cliente ) => {
+	cliente.on( 'conectado', ( id ) => {
+		for ( let i = 0; i < usuarios.length; i++ ) {
+			mensaje( usuarios[i].id, 'Usuario conectado', 'Hola!' );
+		}
+
+		usuarios.push( {
+			socket: cliente,
+			id: id
+		} );
+
+		console.log( 'Cliente conectado, id = ' + id + ', socket = ' + cliente.id );
+	} );
+
+	cliente.on( 'disconnect', () => {
+		for ( let i = 0; i < usuarios.length; i++ ) {
+			if ( usuarios[i].socket.id === cliente.id ) {
+				console.log( 'Cliente desconectado, id = ' + usuarios[i].id + ', socket = ' + cliente.id );
+				usuarios.splice( i, 1 );
+				break;
+			}
+		}
+	} );
+} );
+
+function mensaje( id, titulo, mensaje ) {
+	for ( let i = 0; i < usuarios.length; i++ ) {
+		if ( usuarios[i].id === id ) {
+			usuarios[i].socket.emit( 'mensaje', {
+				titulo: 'Cliente conectado',
+				contenido: id
+			} );
+		}
+	}
+}
+
+io.listen( 8000 );
