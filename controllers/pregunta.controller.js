@@ -425,53 +425,52 @@ exports.generarPreguntasDuelo = function(req, res){
 			for(let i=0; i < n; i++){
 				coso._id.$nin.push(respondidas[i]._id);
 			}
+		}
 
-			let query2 = {$or:[{ID_retador: req.body.ID_retador},{ID_retado: req.body.ID_retador},{ID_retador: req.body.ID_retado},{ID_retado: req.body.ID_retado}]};
+		let query2 = {$or:[{ID_retador: req.body.ID_retador},{ID_retado: req.body.ID_retador},{ID_retador: req.body.ID_retado},{ID_retado: req.body.ID_retado}]};
 
-			ManoaMano.find(query2).exec(function(err,duelos){
-				if(err) return res.json({Error:err});
-
-				if(duelos.length !== 0){
-					let j = duelos.length;
-					for(let i=0;i<j;i++){
-						coso._id.$nin.push(duelos[i].preguntas[0]);
-						coso._id.$nin.push(duelos[i].preguntas[1]);
-						coso._id.$nin.push(duelos[i].preguntas[2]);
-					}
-
-					
-					Pregunta.find(coso).limit(3).exec(function(err,preguntas){
-
-						if(err) return res.json({Error: err});
-
-
-						let mano_a_mano = new ManoaMano({
-							_id: new mongoose.Types.ObjectId(),
-							ID_retador: req.body.ID_retador,
-							ID_retado: req.body.ID_retado,
-							ID_ganador: null,
-							ID_perdedor: null,
-							cant_correcta_retador: "",
-							tiempo_retador: null,
-							fecha: fechaActual(),
-							preguntas: [preguntas[0]._id,preguntas[1]._id,preguntas[2]._id]
-						});
-
-						mano_a_mano.save( (err) => {
-							if(err) return res.json({Error: err});
-
-							Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc: {mmrestantes: -1}}, (err,usuario) =>{
-								if(err) return res.json({Error:err});
-
-								return res.send(preguntas);
-							});		
-						});
-					});
-
+		ManoaMano.find(query2).exec(function(err,duelos){
+			if(err) return res.json({Error:err});
+			
+			if(duelos.length !== 0){
+				let j = duelos.length;
+				for(let i=0;i<j;i++){
+					coso._id.$nin.push(duelos[i].preguntas[0]);
+					coso._id.$nin.push(duelos[i].preguntas[1]);
+					coso._id.$nin.push(duelos[i].preguntas[2]);
 				}
 
+			}
+
+
+			Pregunta.find(coso).limit(3).exec(function(err,preguntas){
+
+				if(err) return res.json({Error: err});
+
+
+				let mano_a_mano = new ManoaMano({
+					_id: new mongoose.Types.ObjectId(),
+					ID_retador: req.body.ID_retador,
+					ID_retado: req.body.ID_retado,
+					ID_ganador: null,
+					ID_perdedor: null,
+					cant_correcta_retador: "",
+					tiempo_retador: null,
+					fecha: fechaActual(),
+					preguntas: [preguntas[0]._id,preguntas[1]._id,preguntas[2]._id]
+				});
+
+				mano_a_mano.save( (err) => {
+					if(err) return res.json({Error: err});
+
+					Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc: {mmrestantes: -1}}, (err,usuario) =>{
+						if(err) return res.json({Error:err});
+
+						return res.send(preguntas);
+					});		
+				});
 			});
-		}
+		});
 
 	});
 
