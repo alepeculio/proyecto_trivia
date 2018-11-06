@@ -5,6 +5,42 @@ const multiparty = require('multiparty');
 const fs = require('fs');
 const ManoaMano = require('../models/mano_a_mano.model');
 
+const io = require( 'socket.io' )();
+
+let usuarios = [];
+
+io.on( 'connection', ( cliente ) => {
+	cliente.on( 'conectado', ( id ) => {
+		usuarios.push( {
+			socket: cliente,
+			id: id
+		} );
+
+		console.log( 'Cliente conectado, id = ' + id + ', socket = ' + cliente.id );
+	} );
+
+	cliente.on( 'disconnect', () => {
+		for ( let i = 0; i < usuarios.length; i++ )
+			if ( usuarios[i].socket.id === cliente.id ) {
+				console.log( 'Cliente desconectado, id = ' + usuarios[i].id + ', socket = ' + cliente.id );
+				usuarios.splice( i, 1 );
+				break;
+			}
+	} );
+} );
+
+function mensaje( id, titulo, mensaje, puntos = 0 ) {
+	for ( let i = 0; i < usuarios.length; i++ )
+		if ( usuarios[i].id === id )
+			usuarios[i].socket.emit( 'mensaje', {
+				titulo: titulo,
+				contenido: mensaje,
+				puntos: puntos
+			} );
+}
+
+io.listen( 8000 );
+
 /*[Ale] ============================================================================================*/
 exports.inicio = (req, res) => {
 	res.render('usuarios.ejs');
@@ -122,6 +158,11 @@ exports.actualizarSuscripcion = (req, res) => {
 
 	Usuario.findOneAndUpdate(query,update)
 	.then( usuario => {
+		if ( req.body.tipo === 'Suscripcion' )
+			mensaje( usuario._id.toString(), '¡Suscripción aceptada!', 'Comienza a responder preguntas' );
+		else if ( req.body.tipo === 'SinSuscripcion' )
+			mensaje( usuario._id.toString(), 'Suscripción finalizada :(', 'Solicita otra suscripción para seguir jugando' );
+
 		res.write(JSON.stringify({Mensaje: 'Suscripción actualizada correctamente'}));
 		res.end();
 	}).catch( err => {
@@ -356,7 +397,9 @@ exports.comenzarDuelo = (req,res) => {
 	ManoaMano.findOneAndUpdate(query,update, (err,duelo) => {
 		if(err) return res.json({Error: err});
 
-		else return res.json({Mensaje: 'OK'});
+		mensaje( req.body.ID_retado, 'Duelo', 'El jugador ... te ha retado' );
+
+		return res.json({Mensaje: 'OK'});
 
 	});
 }
@@ -386,7 +429,7 @@ exports.finalizarDuelo = (req,res) => {
 
 						// Perdio retado
 						mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste a ...', 3 );
-						mensaje( req.body.ID_retado, 'Perdiste', 'Perdisto contra ...', -1 );
+						mensaje( req.body.ID_retado, 'Perdiste', 'Perdiste contra ...', -1 );
 
 						return res.json("PERDISTE");	
 					});	
@@ -411,7 +454,7 @@ exports.finalizarDuelo = (req,res) => {
 
 						// Gano retado
 						mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste a ...', 3 );
-						mensaje( req.body.ID_retador, 'Perdiste', 'Perdisto contra ...', -1 );
+						mensaje( req.body.ID_retador, 'Perdiste', 'Perdiste contra ...', -1 );
 
 						return res.json("GANASTE");
 					});
@@ -435,7 +478,7 @@ exports.finalizarDuelo = (req,res) => {
 
 						// Gano el retado
 						mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste por tiempo a ...', 3 );
-						mensaje( req.body.ID_retador, 'Perdiste', 'Perdisto por tiempo contra ...', -1 );
+						mensaje( req.body.ID_retador, 'Perdiste', 'Perdiste por tiempo contra ...', -1 );
 
 						return res.json("GANASTE"); //por tiempo
 					});
@@ -458,7 +501,7 @@ exports.finalizarDuelo = (req,res) => {
 
 							// Perdio el retado
 							mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste por tiempo a ...', 3 );
-							mensaje( req.body.ID_retado, 'Perdiste', 'Perdisto por tiempo contra ...', -1 );
+							mensaje( req.body.ID_retado, 'Perdiste', 'Perdiste por tiempo contra ...', -1 );
 
 							return res.json("PERDISTE"); //por tiempo
 						});
@@ -475,8 +518,8 @@ exports.finalizarDuelo = (req,res) => {
 							if(err) return res.json({Error:err});
 
 							// Empataron
-							mensaje( req.body.ID_retador, 'Empate', 'Empataron con ...' );
-							mensaje( req.body.ID_retado, 'Empate', 'Empataron con ...' );
+							mensaje( req.body.ID_retador, 'Empate', 'Empataste con ...' );
+							mensaje( req.body.ID_retado, 'Empate', 'Empatastecon ...' );
 
 							return res.json("EMPATE");
 						});
@@ -487,46 +530,3 @@ exports.finalizarDuelo = (req,res) => {
 		});
 
 }
-
-const io = require( 'socket.io' )();
-
-let usuarios = [];
-
-io.on( 'connection', ( cliente ) => {
-	cliente.on( 'conectado', ( id ) => {
-		for ( let i = 0; i < usuarios.length; i++ ) {
-			mensaje( usuarios[i].id, 'Usuario conectado', 'Hola!' );
-		}
-
-		usuarios.push( {
-			socket: cliente,
-			id: id
-		} );
-
-		console.log( 'Cliente conectado, id = ' + id + ', socket = ' + cliente.id );
-	} );
-
-	cliente.on( 'disconnect', () => {
-		for ( let i = 0; i < usuarios.length; i++ ) {
-			if ( usuarios[i].socket.id === cliente.id ) {
-				console.log( 'Cliente desconectado, id = ' + usuarios[i].id + ', socket = ' + cliente.id );
-				usuarios.splice( i, 1 );
-				break;
-			}
-		}
-	} );
-} );
-
-function mensaje( id, titulo, mensaje, puntos = 0 ) {
-	for ( let i = 0; i < usuarios.length; i++ ) {
-		if ( usuarios[i].id === id ) {
-			usuarios[i].socket.emit( 'mensaje', {
-				titulo: titulo,
-				contenido: mensaje,
-				puntos: puntos
-			} );
-		}
-	}
-}
-
-io.listen( 8000 );
