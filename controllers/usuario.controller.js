@@ -6,61 +6,16 @@ const fs = require('fs');
 const ManoaMano = require('../models/mano_a_mano.model');
 const mensajes = require( './mensajes' );
 
-const io = require( 'socket.io' )();
-
-let usuarios = [];
-
-io.on( 'connection', ( cliente ) => {
-	cliente.on( 'conectado', ( id ) => {
-		usuarios.push( {
-			socket: cliente,
-			id: id
-		} );
-
-		console.log( 'Cliente conectado, id = ' + id + ', socket = ' + cliente.id );
-	} );
-
-	cliente.on( 'desconectar', () => {
-		desconectar( cliente.id );
-	});
-
-	cliente.on( 'disconnect', () => {
-		desconectar( cliente.id );
-	} );
-} );
-
-function desconectar( id ) {
-	for ( let i = 0; i < usuarios.length; i++ )
-		if ( usuarios[i].socket.id === id ) {
-			console.log( 'Cliente desconectado, id = ' + usuarios[i].id + ', socket = ' + id );
-			usuarios.splice( i, 1 );
-			break;
-		}
+/*[Ale] ============================================================================================*/
+exports.inicio = (req, res) => {
+	res.render('usuarios.ejs');
 }
 
-	function mensaje( id, titulo, mensaje, puntos = 0 ) {
-		for ( let i = 0; i < usuarios.length; i++ )
-			if ( usuarios[i].id === id )
-				usuarios[i].socket.emit( 'mensaje', {
-					titulo: titulo,
-					contenido: mensaje,
-					puntos: puntos
-				} );
-		}
+exports.registro = (req, res) => {
+	crearUsuario(req,res, 'SinSuscripcion', 3, 0);
+}
 
-		io.listen( 8000 );
->>>>>>> ff3f103268eeee1a40b5400056757ba33253c08f
-
-		/*[Ale] ============================================================================================*/
-		exports.inicio = (req, res) => {
-			res.render('usuarios.ejs');
-		}
-
-		exports.registro = (req, res) => {
-			crearUsuario(req,res, 'SinSuscripcion', 3, 0);
-		}
-
-		function crearUsuario(req, res, tipo, mmrestantes, puntaje){
+function crearUsuario(req, res, tipo, mmrestantes, puntaje){
 	var form = new multiparty.Form(); //Para el manejo de datos de formularios 'multipart/form-data'
 
 	form.parse(req, function(err, fields, files) {
