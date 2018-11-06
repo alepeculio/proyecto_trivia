@@ -1,4 +1,4 @@
-const io = require( 'socket.io' )();
+/*const io = require( 'socket.io' )();
 
 let usuarios = [];
 
@@ -40,7 +40,7 @@ exports.mensaje = ( id, titulo, mensaje, puntos = 0 ) => {
 			} );
 }
 
-io.listen( 8000 );
+io.listen( 1234 );
 
 let nodemailer = require( 'nodemailer' );
 
@@ -65,4 +65,4 @@ exports.correo = ( para, titulo, mensaje ) => {
 		else
 			console.log( 'Correo enviado a ' + para );
 	} );
-}
+}*/

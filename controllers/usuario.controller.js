@@ -4,7 +4,7 @@ const Usuario = require('../models/usuario.model');
 const multiparty = require('multiparty');
 const fs = require('fs');
 const ManoaMano = require('../models/mano_a_mano.model');
-const mensajes = require( './mensajes' );
+const mensajes = require( '../index' );
 
 /*[Ale] ============================================================================================*/
 exports.inicio = (req, res) => {

@@ -7,7 +7,7 @@ const Pregunta = require('../models/pregunta.model');
 const Usuario = require('../models/usuario.model');
 const Categoria = require('../models/categoria.model');
 const ManoaMano = require('../models/mano_a_mano.model');
-const mensajes = require( './mensajes' );
+const mensajes = require( '../index' );
 
 var csv = require( 'csv-express' );
 
