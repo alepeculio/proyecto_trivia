@@ -6,16 +6,61 @@ const fs = require('fs');
 const ManoaMano = require('../models/mano_a_mano.model');
 const mensajes = require( './mensajes' );
 
-/*[Ale] ============================================================================================*/
-exports.inicio = (req, res) => {
-	res.render('usuarios.ejs');
+const io = require( 'socket.io' )();
+
+let usuarios = [];
+
+io.on( 'connection', ( cliente ) => {
+	cliente.on( 'conectado', ( id ) => {
+		usuarios.push( {
+			socket: cliente,
+			id: id
+		} );
+
+		console.log( 'Cliente conectado, id = ' + id + ', socket = ' + cliente.id );
+	} );
+
+	cliente.on( 'desconectar', () => {
+		desconectar( cliente.id );
+	});
+
+	cliente.on( 'disconnect', () => {
+		desconectar( cliente.id );
+	} );
+} );
+
+function desconectar( id ) {
+	for ( let i = 0; i < usuarios.length; i++ )
+		if ( usuarios[i].socket.id === id ) {
+			console.log( 'Cliente desconectado, id = ' + usuarios[i].id + ', socket = ' + id );
+			usuarios.splice( i, 1 );
+			break;
+		}
 }
 
-exports.registro = (req, res) => {
-	crearUsuario(req,res, 'SinSuscripcion', 3, 0);
-}
+	function mensaje( id, titulo, mensaje, puntos = 0 ) {
+		for ( let i = 0; i < usuarios.length; i++ )
+			if ( usuarios[i].id === id )
+				usuarios[i].socket.emit( 'mensaje', {
+					titulo: titulo,
+					contenido: mensaje,
+					puntos: puntos
+				} );
+		}
 
-function crearUsuario(req, res, tipo, mmrestantes, puntaje){
+		io.listen( 8000 );
+>>>>>>> ff3f103268eeee1a40b5400056757ba33253c08f
+
+		/*[Ale] ============================================================================================*/
+		exports.inicio = (req, res) => {
+			res.render('usuarios.ejs');
+		}
+
+		exports.registro = (req, res) => {
+			crearUsuario(req,res, 'SinSuscripcion', 3, 0);
+		}
+
+		function crearUsuario(req, res, tipo, mmrestantes, puntaje){
 	var form = new multiparty.Form(); //Para el manejo de datos de formularios 'multipart/form-data'
 
 	form.parse(req, function(err, fields, files) {
@@ -399,12 +444,12 @@ exports.finalizarDuelo = (req,res) => {
 				ManoaMano.findOneAndUpdate({_id: duelo._id},update,(err,duelo) => {
 					if(err) return res.json({Error:err});
 
-					Usuario.findOneAndUpdate({_id: req.body.ID_retado},{$inc: {puntaje: -1}}, (err,usuario) =>{
+					Usuario.findOneAndUpdate({_id: req.body.ID_retado},{$inc: {puntaje: -1}}, (err,usuario2) =>{
 						if(err) return res.json({Error:err});
 
 						// Perdio retado
-						mensajes.mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste a ...', 3 );
-						mensajes.mensaje( req.body.ID_retado, 'Perdiste', 'Perdiste contra ...', -1 );
+						mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste a ' + usuario2.nombre + ' ' + usuario2.apellido, 3 );
+						mensaje( req.body.ID_retado, 'Perdiste', 'Perdiste contra ...' + usuario.nombre + ' ' + usuario.apellido, -1 );
 
 						return res.json("PERDISTE");	
 					});	
@@ -424,12 +469,12 @@ exports.finalizarDuelo = (req,res) => {
 				ManoaMano.findOneAndUpdate({_id: duelo._id}, update2, (err,duelo) =>{
 					if(err) return res.json({Error:err});
 
-					Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc:{puntaje: -1}}, (err,usuario) => {
+					Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc:{puntaje: -1}}, (err,usuario2) => {
 						if(err) return res.json({Error:err});
 
 						// Gano retado
-						mensajes.mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste a ...', 3 );
-						mensajes.mensaje( req.body.ID_retador, 'Perdiste', 'Perdiste contra ...', -1 );
+						mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste a '+ usuario2.nombre + ' ' + usuario2.apellido, 3 );
+						mensaje( req.body.ID_retador, 'Perdiste', 'Perdiste contra ' + usuario.nombre + ' ' + usuario.apellido, -1 );
 
 						return res.json("GANASTE");
 					});
@@ -451,11 +496,16 @@ exports.finalizarDuelo = (req,res) => {
 					ManoaMano.findOneAndUpdate({_id: duelo._id}, update3, (err,duelo) =>{
 						if(err) return res.json({Error: err});
 
-						// Gano el retado
-						mensajes.mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste por tiempo a ...', 3 );
-						mensajes.mensaje( req.body.ID_retador, 'Perdiste', 'Perdiste por tiempo contra ...', -1 );
+						Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc:{puntaje: -1}}, (err,usuario2) => {
+							if(err) return res.json({Error:err});
 
-						return res.json("GANASTE"); //por tiempo
+						// Gano retado
+						mensajes.mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste a '+ usuario2.nombre + ' ' + usuario2.apellido, 3 );
+						mensajes.mensaje( req.body.ID_retador, 'Perdiste', 'Perdiste contra ' + usuario.nombre + ' ' + usuario.apellido, -1 );
+
+						return res.json("GANASTE");//por tiempo
+					});
+
 					});
 				});
 			}else if(tiempo > duelo.tiempo_retador){
@@ -471,12 +521,12 @@ exports.finalizarDuelo = (req,res) => {
 						if(err) return res.json({Error: err});
 
 
-						Usuario.findOneAndUpdate({_id: req.body.ID_retado},{$inc: {puntaje: -1 }}, (err,usuario) =>{
+						Usuario.findOneAndUpdate({_id: req.body.ID_retado},{$inc: {puntaje: -1 }}, (err,usuario2) =>{
 							if(err) return res.json({Error: err});
 
 							// Perdio el retado
-							mensajes.mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste por tiempo a ...', 3 );
-							mensajes.mensaje( req.body.ID_retado, 'Perdiste', 'Perdiste por tiempo contra ...', -1 );
+							mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste por tiempo a '+ usuario2.nombre + ' ' + usuario2.apellido, 3 );
+							mensaje( req.body.ID_retado, 'Perdiste', 'Perdiste por tiempo contra '+ usuario.nombre + ' ' + usuario.apellido, -1 );
 
 							return res.json("PERDISTE"); //por tiempo
 						});
@@ -492,11 +542,13 @@ exports.finalizarDuelo = (req,res) => {
 						Usuario.findOneAndUpdate({_id: req.body.ID_retador}, {$inc: {mmrestantes: 1}}, (err,usuario) => {
 							if(err) return res.json({Error:err});
 
-							// Empataron
-							mensajes.mensaje( req.body.ID_retador, 'Empate', 'Empataste con ...' );
-							mensajes.mensaje( req.body.ID_retado, 'Empate', 'Empatastecon ...' );
+							Usuario.findOne({_id: req.body.ID_retado}, (err,usuario2) => {
+								// Empataron
+								mensaje( req.body.ID_retador, 'Empate', 'Empataste con '+ usuario2.nombre + ' ' + usuario2.apellido);
+								mensaje( req.body.ID_retado, 'Empate', 'Empataste con '+  usuario.nombre + ' ' + usuario.apellido);
 
-							return res.json("EMPATE");
+								return res.json("EMPATE");
+							});
 						});
 					});
 				}
