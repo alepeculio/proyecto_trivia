@@ -121,8 +121,12 @@ exports.preguntasDiarias = ( req, res ) => {
 		} else {
 			// Obtener las id de las preguntas diarias de hoy
 			let ids = [];
-			for ( let i = 0; i < diarias.length; i++ )
-				ids.push( diarias[i].ID_pregunta._id );
+			for ( let i = 0; i < diarias.length; i++ ){
+				if(diarias[i].ID_pregunta != null){
+					ids.push( diarias[i].ID_pregunta._id );	
+				}
+			}
+					
 
 			// Buscar si fueron respondidas por ese usuario
 			PreguntasRespondidas.find( { ID_usuario: id_usu, ID_pregunta: { $in: ids } }, ( err, respondidas ) => {
