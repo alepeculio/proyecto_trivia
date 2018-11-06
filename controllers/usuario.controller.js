@@ -19,15 +19,23 @@ io.on( 'connection', ( cliente ) => {
 		console.log( 'Cliente conectado, id = ' + id + ', socket = ' + cliente.id );
 	} );
 
+	cliente.on( 'desconectar', () => {
+		desconectar( cliente.id );
+	} );
+
 	cliente.on( 'disconnect', () => {
-		for ( let i = 0; i < usuarios.length; i++ )
-			if ( usuarios[i].socket.id === cliente.id ) {
-				console.log( 'Cliente desconectado, id = ' + usuarios[i].id + ', socket = ' + cliente.id );
-				usuarios.splice( i, 1 );
-				break;
-			}
+		desconectar( cliente.id );
 	} );
 } );
+
+function desconectar( id ) {
+	for ( let i = 0; i < usuarios.length; i++ )
+		if ( usuarios[i].socket.id === id ) {
+			console.log( 'Cliente desconectado, id = ' + usuarios[i].id + ', socket = ' + id );
+			usuarios.splice( i, 1 );
+			break;
+		}
+}
 
 function mensaje( id, titulo, mensaje, puntos = 0 ) {
 	for ( let i = 0; i < usuarios.length; i++ )
