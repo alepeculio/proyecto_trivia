@@ -4,42 +4,7 @@ const Usuario = require('../models/usuario.model');
 const multiparty = require('multiparty');
 const fs = require('fs');
 const ManoaMano = require('../models/mano_a_mano.model');
-
-const io = require( 'socket.io' )();
-
-let usuarios = [];
-
-io.on( 'connection', ( cliente ) => {
-	cliente.on( 'conectado', ( id ) => {
-		usuarios.push( {
-			socket: cliente,
-			id: id
-		} );
-
-		console.log( 'Cliente conectado, id = ' + id + ', socket = ' + cliente.id );
-	} );
-
-	cliente.on( 'disconnect', () => {
-		for ( let i = 0; i < usuarios.length; i++ )
-			if ( usuarios[i].socket.id === cliente.id ) {
-				console.log( 'Cliente desconectado, id = ' + usuarios[i].id + ', socket = ' + cliente.id );
-				usuarios.splice( i, 1 );
-				break;
-			}
-	} );
-} );
-
-function mensaje( id, titulo, mensaje, puntos = 0 ) {
-	for ( let i = 0; i < usuarios.length; i++ )
-		if ( usuarios[i].id === id )
-			usuarios[i].socket.emit( 'mensaje', {
-				titulo: titulo,
-				contenido: mensaje,
-				puntos: puntos
-			} );
-}
-
-io.listen( 8000 );
+const mensajes = require( './mensajes' );
 
 /*[Ale] ============================================================================================*/
 exports.inicio = (req, res) => {
@@ -159,9 +124,9 @@ exports.actualizarSuscripcion = (req, res) => {
 	Usuario.findOneAndUpdate(query,update)
 	.then( usuario => {
 		if ( req.body.tipo === 'Suscripcion' )
-			mensaje( usuario._id.toString(), '¡Suscripción aceptada!', 'Comienza a responder preguntas' );
+			mensajes.mensaje( usuario._id.toString(), '¡Suscripción aceptada!', 'Comienza a responder preguntas' );
 		else if ( req.body.tipo === 'SinSuscripcion' )
-			mensaje( usuario._id.toString(), 'Suscripción finalizada :(', 'Solicita otra suscripción para seguir jugando' );
+			mensajes.mensaje( usuario._id.toString(), 'Suscripción finalizada :(', 'Solicita otra suscripción para seguir jugando' );
 
 		res.write(JSON.stringify({Mensaje: 'Suscripción actualizada correctamente'}));
 		res.end();
@@ -241,6 +206,16 @@ function getUser(u){
 }
 
 /*[FIN Ale] ========================================================================================*/
+
+exports.solicitar = ( req, res ) => {
+	mensajes.mensaje( req.query.id, 'Solicitud realizada', 'Vea su correo para más información' );
+	mensajes.correo( req.query.correo, 'Solicitud realizada', '<b>Para realizar el pago diríjase al laboratorio 1 del TIP</b><p>Hable con uno de los estudiantes del taller de .NET responsables del desarrollo del juego.</p>' );
+
+	Usuario.find( { tipo: 'Admin' } ).exec( ( err, admins ) => {
+		for ( let i = 0; i < admins.length; i++ )
+			mensajes.correo( admins[i].correo, 'Solicitud de suscripción', '<b>Solicitud de ' + req.query.nombre + '</b>' );
+	} );
+}
 
 //luis
 exports.retos = (req, res) => {
@@ -397,7 +372,7 @@ exports.comenzarDuelo = (req,res) => {
 	ManoaMano.findOneAndUpdate(query,update, (err,duelo) => {
 		if(err) return res.json({Error: err});
 
-		mensaje( req.body.ID_retado, 'Duelo', 'El jugador ... te ha retado' );
+		mensajes.mensaje( req.body.ID_retado, 'Duelo', 'El jugador ... te ha retado' );
 
 		return res.json({Mensaje: 'OK'});
 
@@ -424,12 +399,12 @@ exports.finalizarDuelo = (req,res) => {
 				ManoaMano.findOneAndUpdate({_id: duelo._id},update,(err,duelo) => {
 					if(err) return res.json({Error:err});
 
-					Usuario.findOneAndUpdate({_id: req.body.ID_retado},{$inc: {puntaje: -1}}, (err,usuario) =>{
+					Usuario.findOneAndUpdate({_id: req.body.ID_retado},{$inc: {puntaje: -1}}, (err,usuario2) =>{
 						if(err) return res.json({Error:err});
 
 						// Perdio retado
-						mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste a ...', 3 );
-						mensaje( req.body.ID_retado, 'Perdiste', 'Perdiste contra ...', -1 );
+						mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste a ' + usuario2.nombre + ' ' + usuario2.apellido, 3 );
+						mensaje( req.body.ID_retado, 'Perdiste', 'Perdiste contra ...' + usuario.nombre + ' ' + usuario.apellido, -1 );
 
 						return res.json("PERDISTE");	
 					});	
@@ -449,12 +424,12 @@ exports.finalizarDuelo = (req,res) => {
 				ManoaMano.findOneAndUpdate({_id: duelo._id}, update2, (err,duelo) =>{
 					if(err) return res.json({Error:err});
 
-					Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc:{puntaje: -1}}, (err,usuario) => {
+					Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc:{puntaje: -1}}, (err,usuario2) => {
 						if(err) return res.json({Error:err});
 
 						// Gano retado
-						mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste a ...', 3 );
-						mensaje( req.body.ID_retador, 'Perdiste', 'Perdiste contra ...', -1 );
+						mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste a '+ usuario2.nombre + ' ' + usuario2.apellido, 3 );
+						mensaje( req.body.ID_retador, 'Perdiste', 'Perdiste contra ' + usuario.nombre + ' ' + usuario.apellido, -1 );
 
 						return res.json("GANASTE");
 					});
@@ -476,11 +451,16 @@ exports.finalizarDuelo = (req,res) => {
 					ManoaMano.findOneAndUpdate({_id: duelo._id}, update3, (err,duelo) =>{
 						if(err) return res.json({Error: err});
 
-						// Gano el retado
-						mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste por tiempo a ...', 3 );
-						mensaje( req.body.ID_retador, 'Perdiste', 'Perdiste por tiempo contra ...', -1 );
+						Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc:{puntaje: -1}}, (err,usuario2) => {
+							if(err) return res.json({Error:err});
 
-						return res.json("GANASTE"); //por tiempo
+						// Gano retado
+						mensajes.mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste a '+ usuario2.nombre + ' ' + usuario2.apellido, 3 );
+						mensajes.mensaje( req.body.ID_retador, 'Perdiste', 'Perdiste contra ' + usuario.nombre + ' ' + usuario.apellido, -1 );
+
+						return res.json("GANASTE");//por tiempo
+					});
+
 					});
 				});
 			}else if(tiempo > duelo.tiempo_retador){
@@ -496,12 +476,12 @@ exports.finalizarDuelo = (req,res) => {
 						if(err) return res.json({Error: err});
 
 
-						Usuario.findOneAndUpdate({_id: req.body.ID_retado},{$inc: {puntaje: -1 }}, (err,usuario) =>{
+						Usuario.findOneAndUpdate({_id: req.body.ID_retado},{$inc: {puntaje: -1 }}, (err,usuario2) =>{
 							if(err) return res.json({Error: err});
 
 							// Perdio el retado
-							mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste por tiempo a ...', 3 );
-							mensaje( req.body.ID_retado, 'Perdiste', 'Perdiste por tiempo contra ...', -1 );
+							mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste por tiempo a '+ usuario2.nombre + ' ' + usuario2.apellido, 3 );
+							mensaje( req.body.ID_retado, 'Perdiste', 'Perdiste por tiempo contra '+ usuario.nombre + ' ' + usuario.apellido, -1 );
 
 							return res.json("PERDISTE"); //por tiempo
 						});
@@ -517,11 +497,13 @@ exports.finalizarDuelo = (req,res) => {
 						Usuario.findOneAndUpdate({_id: req.body.ID_retador}, {$inc: {mmrestantes: 1}}, (err,usuario) => {
 							if(err) return res.json({Error:err});
 
-							// Empataron
-							mensaje( req.body.ID_retador, 'Empate', 'Empataste con ...' );
-							mensaje( req.body.ID_retado, 'Empate', 'Empatastecon ...' );
+							Usuario.findOne({_id: req.body.ID_retado}, (err,usuario2) => {
+								// Empataron
+								mensaje( req.body.ID_retador, 'Empate', 'Empataste con '+ usuario2.nombre + ' ' + usuario2.apellido);
+								mensaje( req.body.ID_retado, 'Empate', 'Empataste con '+  usuario.nombre + ' ' + usuario.apellido);
 
-							return res.json("EMPATE");
+								return res.json("EMPATE");
+							});
 						});
 					});
 				}

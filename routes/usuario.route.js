@@ -28,4 +28,6 @@ router.post( '/authRegistro', AuthController.authRegistro );
 router.get( '/authMe', VerifyToken, AuthController.authMe );
 router.post( '/authLogin', AuthController.authLogin );
 
+router.get( '/solicitar', usuario_controller.solicitar );
+
 module.exports = router;
