@@ -385,8 +385,8 @@ exports.finalizarDuelo = (req,res) => {
 						if(err) return res.json({Error:err});
 
 						// Perdio retado
-						mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste a ...' );
-						mensaje( req.body.ID_retado, 'Perdiste', 'Perdisto contra ...' );
+						mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste a ...', 3 );
+						mensaje( req.body.ID_retado, 'Perdiste', 'Perdisto contra ...', -1 );
 
 						return res.json("PERDISTE");	
 					});	
@@ -410,8 +410,8 @@ exports.finalizarDuelo = (req,res) => {
 						if(err) return res.json({Error:err});
 
 						// Gano retado
-						mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste a ...' );
-						mensaje( req.body.ID_retador, 'Perdiste', 'Perdisto contra ...' );
+						mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste a ...', 3 );
+						mensaje( req.body.ID_retador, 'Perdiste', 'Perdisto contra ...', -1 );
 
 						return res.json("GANASTE");
 					});
@@ -434,8 +434,8 @@ exports.finalizarDuelo = (req,res) => {
 						if(err) return res.json({Error: err});
 
 						// Gano el retado
-						mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste por tiempo a ...' );
-						mensaje( req.body.ID_retador, 'Perdiste', 'Perdisto por tiempo contra ...' );
+						mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste por tiempo a ...', 3 );
+						mensaje( req.body.ID_retador, 'Perdiste', 'Perdisto por tiempo contra ...', -1 );
 
 						return res.json("GANASTE"); //por tiempo
 					});
@@ -457,8 +457,8 @@ exports.finalizarDuelo = (req,res) => {
 							if(err) return res.json({Error: err});
 
 							// Perdio el retado
-							mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste por tiempo a ...' );
-							mensaje( req.body.ID_retado, 'Perdiste', 'Perdisto por tiempo contra ...' );
+							mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste por tiempo a ...', 3 );
+							mensaje( req.body.ID_retado, 'Perdiste', 'Perdisto por tiempo contra ...', -1 );
 
 							return res.json("PERDISTE"); //por tiempo
 						});
@@ -517,12 +517,13 @@ io.on( 'connection', ( cliente ) => {
 	} );
 } );
 
-function mensaje( id, titulo, mensaje ) {
+function mensaje( id, titulo, mensaje, puntos = 0 ) {
 	for ( let i = 0; i < usuarios.length; i++ ) {
 		if ( usuarios[i].id === id ) {
 			usuarios[i].socket.emit( 'mensaje', {
-				titulo: 'Cliente conectado',
-				contenido: id
+				titulo: titulo,
+				contenido: mensaje,
+				puntos: puntos
 			} );
 		}
 	}
