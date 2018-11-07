@@ -512,3 +512,8 @@ exports.finalizarDuelo = (req,res) => {
 		});
 
 }
+
+
+exports.hora = ( req, res ) => {
+	res.send( new Date() );
+}
