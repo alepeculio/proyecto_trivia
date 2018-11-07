@@ -215,6 +215,8 @@ exports.solicitar = ( req, res ) => {
 		for ( let i = 0; i < admins.length; i++ )
 			mensajes.correo( admins[i].correo, 'Solicitud de suscripción', '<b>Solicitud de ' + req.query.nombre + '</b>' );
 	} );
+
+	res.send( 'OK' );
 }
 
 //luis
