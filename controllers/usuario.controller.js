@@ -123,9 +123,11 @@ exports.actualizarSuscripcion = (req, res) => {
 
 	Usuario.findOneAndUpdate(query,update)
 	.then( usuario => {
-		if ( req.body.tipo === 'Suscripcion' )
+		if ( req.body.tipo === 'Suscripcion' ){
+			console.log(usuario.correo);
 			mensajes.mensaje( usuario._id.toString(), '¡Suscripción aceptada!', 'Comienza a responder preguntas' );
-		else if ( req.body.tipo === 'SinSuscripcion' )
+			mensajes.correo( usuario.correo,'¡Suscripción aceptada!', '<b>Inicia sesión y comienza a responder preguntas!!!</b> <p>Tenemos premios increíbles...</p> \n\n https://triviatip.herokuapp.com/'  );
+		}else if ( req.body.tipo === 'SinSuscripcion' )
 			mensajes.mensaje( usuario._id.toString(), 'Suscripción finalizada :(', 'Solicita otra suscripción para seguir jugando' );
 
 		res.write(JSON.stringify({Mensaje: 'Suscripción actualizada correctamente'}));
