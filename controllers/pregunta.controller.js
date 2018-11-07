@@ -7,6 +7,7 @@ const Pregunta = require('../models/pregunta.model');
 const Usuario = require('../models/usuario.model');
 const Categoria = require('../models/categoria.model');
 const ManoaMano = require('../models/mano_a_mano.model');
+const mensajes = require( './mensajes' );
 
 var csv = require( 'csv-express' );
 
@@ -480,7 +481,7 @@ exports.generarPreguntasDuelo = function(req, res){
 			});
 
 		}else{
-			return res.json({Mensaje: 'Excediste el límite de duelos por día.'});
+			mensajes.mensaje(user._id.toString(), 'Mensaje', 'Excediste el límite de duelos por día,vuelve a intentarlo mañana!', );
 		}
 	});
 
