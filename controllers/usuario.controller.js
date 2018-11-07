@@ -223,7 +223,7 @@ exports.retos = (req, res) => {
 }
 
 function fechaActual() {
-	let hoy = new Date();
+	let hoy = getHora();
 	return hoy.getDate() + '-' + ( hoy.getMonth() + 1 ) + '-' + hoy.getFullYear();
 }
 
@@ -513,7 +513,12 @@ exports.finalizarDuelo = (req,res) => {
 
 }
 
+function getHora() {
+	let hora = new Date();
+	hora.setTime( new Date().getTime() - 10800000 );
+	return hora;
+}
 
 exports.hora = ( req, res ) => {
-	res.send( new Date() );
+	res.send( getHora() );
 }
