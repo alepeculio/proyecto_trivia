@@ -15,7 +15,8 @@ var userSchema = new Schema({
 	img: { data: Buffer, contentType: String},
 	tipo: {type:String,enum: ['Admin', 'Suscripcion', 'SinSuscripcion']},
 	mmrestantes:{type:Number, required:true},
-	puntaje:{type: Number,required: true}
+	puntaje:{type: Number,required: true},
+	ultima_conexion: {type: String}
 });
 
 module.exports = mongoose.model('Usuario', userSchema);

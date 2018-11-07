@@ -50,16 +50,21 @@ function crearUsuario( req, res, tipo, mmrestantes, puntaje ) {
 			usuario.img.contentType = contentType;
 
 			usuario.save()
-				.then( ( u ) => {
-					var token = jwt.sign( { id: usuario._id }, config.secret, { expiresIn: 86400 } );
-					res.status( 200 ).send( { auth: true, token } );
-				} )
-				.catch( ( err ) => {
-					console.log( err );
-					res.status( 500 ).json( { Error: 'No se pudo agregar el usuario debido al siguiente error: ' + err.message } );
-				} );
+			.then( ( u ) => {
+				var token = jwt.sign( { id: usuario._id }, config.secret, { expiresIn: 86400 } );
+				res.status( 200 ).send( { auth: true, token } );
+			} )
+			.catch( ( err ) => {
+				console.log( err );
+				res.status( 500 ).json( { Error: 'No se pudo agregar el usuario debido al siguiente error: ' + err.message } );
+			} );
 		} );
 	} );
+}
+
+function fechaActual() {
+	let hoy = new Date();
+	return hoy.getDate() + '-' + ( hoy.getMonth() + 1 ) + '-' + hoy.getFullYear();
 }
 
 exports.authMe = ( req, res, next ) => {
@@ -79,10 +84,28 @@ exports.authMe = ( req, res, next ) => {
 			if ( !usuario )
 				return res.status( 404 ).send( 'No se encontró el usuario' );
 
+			resetearDuelos(usuario);
+
 			res.status( 200 ).send( getUser(usuario) );
 		} );
 	} );
 };
+
+function resetearDuelos(usuario){
+	let hoy = fechaActual();
+	if(usuario.ultima_conexion !== undefined){
+		if(usuario.ultima_conexion !== hoy){
+			Usuario.findOneAndUpdate({_id: usuario._id}, {$inc: {mmrestantes: 3}, ultima_conexion: hoy}, (err,usuario) =>{
+				if(err) console.log(err);
+			});
+		}
+	}else{
+
+		Usuario.findOneAndUpdate({_id: usuario._id}, {ultima_conexion: hoy}, (err,usuario) => {
+			if(err) console.log(err);
+		});
+	}
+}
 
 exports.authLogin = ( req, res ) => {
 	Usuario.findOne( { correo: req.body.correo }, ( err, usuario ) => {

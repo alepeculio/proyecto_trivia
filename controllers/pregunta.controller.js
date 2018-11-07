@@ -407,71 +407,81 @@ exports.eliminar_pregunta = (req, res) => {
 
 exports.generarPreguntasDuelo = function(req, res){
 
-	let query = {$or:[{ID_usuario:req.body.ID_retador},{ID_usuario:req.body.ID_retado}]};
+	Usuario.findOne({_id: req.body.ID_retador}, (err,user) => {
+		if(err) return res.json({Error:err});
 
-	let coso = new Object();
+		if(user.mmrestantes > 0){
 
-	coso._id = {};
+			let query = {$or:[{ID_usuario:req.body.ID_retador},{ID_usuario:req.body.ID_retado}]};
 
-	coso._id.$nin = [];
+			let coso = new Object();
 
+			coso._id = {};
 
-	PreguntasRespondidas.find(query).exec(function(err,respondidas){
-
-		if(err) return res.json({Error: err});
-
-		if(respondidas.length !== 0){
-			let n = respondidas.length;
-			for(let i=0; i < n; i++){
-				coso._id.$nin.push(respondidas[i]._id);
-			}
-		}
-
-		let query2 = {$or:[{ID_retador: req.body.ID_retador},{ID_retado: req.body.ID_retador},{ID_retador: req.body.ID_retado},{ID_retado: req.body.ID_retado}]};
-
-		ManoaMano.find(query2).exec(function(err,duelos){
-			if(err) return res.json({Error:err});
-			
-			if(duelos.length !== 0){
-				let j = duelos.length;
-				for(let i=0;i<j;i++){
-					coso._id.$nin.push(duelos[i].preguntas[0]);
-					coso._id.$nin.push(duelos[i].preguntas[1]);
-					coso._id.$nin.push(duelos[i].preguntas[2]);
-				}
-
-			}
+			coso._id.$nin = [];
 
 
-			Pregunta.find(coso).limit(3).exec(function(err,preguntas){
+			PreguntasRespondidas.find(query).exec(function(err,respondidas){
 
 				if(err) return res.json({Error: err});
 
+				if(respondidas.length !== 0){
+					let n = respondidas.length;
+					for(let i=0; i < n; i++){
+						coso._id.$nin.push(respondidas[i]._id);
+					}
+				}
 
-				let mano_a_mano = new ManoaMano({
-					_id: new mongoose.Types.ObjectId(),
-					ID_retador: req.body.ID_retador,
-					ID_retado: req.body.ID_retado,
-					ID_ganador: null,
-					ID_perdedor: null,
-					cant_correcta_retador: "",
-					tiempo_retador: null,
-					fecha: fechaActual(),
-					preguntas: [preguntas[0]._id,preguntas[1]._id,preguntas[2]._id]
+				let query2 = {$or:[{ID_retador: req.body.ID_retador},{ID_retado: req.body.ID_retador},{ID_retador: req.body.ID_retado},{ID_retado: req.body.ID_retado}]};
+
+				ManoaMano.find(query2).exec(function(err,duelos){
+					if(err) return res.json({Error:err});
+
+					if(duelos.length !== 0){
+						let j = duelos.length;
+						for(let i=0;i<j;i++){
+							coso._id.$nin.push(duelos[i].preguntas[0]);
+							coso._id.$nin.push(duelos[i].preguntas[1]);
+							coso._id.$nin.push(duelos[i].preguntas[2]);
+						}
+
+					}
+
+
+					Pregunta.find(coso).limit(3).exec(function(err,preguntas){
+
+						if(err) return res.json({Error: err});
+
+
+						let mano_a_mano = new ManoaMano({
+							_id: new mongoose.Types.ObjectId(),
+							ID_retador: req.body.ID_retador,
+							ID_retado: req.body.ID_retado,
+							ID_ganador: null,
+							ID_perdedor: null,
+							cant_correcta_retador: "",
+							tiempo_retador: null,
+							fecha: fechaActual(),
+							preguntas: [preguntas[0]._id,preguntas[1]._id,preguntas[2]._id]
+						});
+
+						mano_a_mano.save( (err) => {
+							if(err) return res.json({Error: err});
+
+							Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc: {mmrestantes: -1}}, (err,usuario) =>{
+								if(err) return res.json({Error:err});
+
+								return res.send(preguntas);
+							});		
+						});
+					});
 				});
 
-				mano_a_mano.save( (err) => {
-					if(err) return res.json({Error: err});
-
-					Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc: {mmrestantes: -1}}, (err,usuario) =>{
-						if(err) return res.json({Error:err});
-
-						return res.send(preguntas);
-					});		
-				});
 			});
-		});
 
+		}else{
+			return res.json({Mensaje: 'Excediste el límite de duelos por día.'});
+		}
 	});
 
 	
