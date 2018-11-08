@@ -128,7 +128,7 @@ exports.actualizarSuscripcion = (req, res) => {
 			mensajes.mensaje( usuario._id.toString(), '¡Suscripción aceptada!', 'Comienza a responder preguntas' );
 			mensajes.correo( usuario.correo,'¡Suscripción aceptada!', '<b>Inicia sesión y comienza a responder preguntas!!!</b> <p>Tenemos premios increíbles...</p> \n\n https://triviatip.herokuapp.com/'  );
 		}else if ( req.body.tipo === 'SinSuscripcion' )
-			mensajes.mensaje( usuario._id.toString(), 'Suscripción finalizada :(', 'Solicita otra suscripción para seguir jugando' );
+		mensajes.mensaje( usuario._id.toString(), 'Suscripción finalizada :(', 'Solicita otra suscripción para seguir jugando' );
 
 		res.write(JSON.stringify({Mensaje: 'Suscripción actualizada correctamente'}));
 		res.end();
@@ -246,13 +246,13 @@ exports.cancelarReto = (req,res) => {
 }
 
 exports.listarRetos = (req,res) => {
-	ManoaMano.find({ID_retado: req.query.id, ID_ganador: null})
+	ManoaMano.find({ID_retado: req.query.id, ID_ganador: null, cant_correcta_retador: {$not: {$eq: null}}})
 	.exec(function(err,duels){
 
 		if(err) return res.json({Error: err});
 
 		if(duels.length == 0){
-			res.json({Mensaje: 'No hay duelos'});
+			return res.json({Mensaje: 'No hay duelos'});
 		}else{
 			let coso = new Object();
 			coso._id = {};
@@ -378,10 +378,12 @@ exports.comenzarDuelo = (req,res) => {
 	ManoaMano.findOneAndUpdate(query,update, (err,duelo) => {
 		if(err) return res.json({Error: err});
 
-		mensajes.mensaje( req.body.ID_retado, 'Duelo', 'El jugador ... te ha retado' );
+		Usuario.findOne({_id: req.body.ID_retador}, (err,usuario) =>{
 
-		return res.json({Mensaje: 'OK'});
+			mensajes.mensaje( req.body.ID_retado, 'Duelo', 'El jugador '+ usuario.nombre + ' ' + usuario.apellido +'te ha retado' );
 
+			return res.json({Mensaje: 'OK'});
+		});
 	});
 }
 
@@ -410,7 +412,7 @@ exports.finalizarDuelo = (req,res) => {
 
 						// Perdio retado
 						mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste a ' + usuario2.nombre + ' ' + usuario2.apellido, 3 );
-						mensaje( req.body.ID_retado, 'Perdiste', 'Perdiste contra ...' + usuario.nombre + ' ' + usuario.apellido, -1 );
+						mensaje( req.body.ID_retado, 'Perdiste', 'Perdiste contra ' + usuario.nombre + ' ' + usuario.apellido, -1 );
 
 						return res.json("PERDISTE");	
 					});	
