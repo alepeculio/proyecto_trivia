@@ -311,22 +311,19 @@ exports.listarRetosPropios = (req,res) => {
 exports.usuariosSinRetar = (req,res) => {
 	let retados = [];
 
+	ManoaMano.find({ $or: [ { ID_retador: req.query.id } , { ID_retado: req.query.id } ] , ID_ganador: null})
+	.exec(function(err,result){
 
-	ManoaMano.find({ $or: [ { ID_retador: req.query.id } , { ID_retado: req.query.id } ] , ID_ganador: null  }).exec(function(err,result){
-		res.statusCode = 200;
-		res.setHeader('Content-Type','application/json');
 		if(result.length == 0){
-			Usuario.find({ _id: { $not: { $eq: req.query.id } } , tipo: { $not: { $eq: "Admin" } } }).exec((err, users)  => {
-				if(err){
-					console.log(err);
-					res.json({Error: 'No se pudieron listar los usuarios debido al siguiente error: '+err.message});
-				}else{
-					let usuarios = [];
-					for(u of users){
-						usuarios.push(getUser(u));
-					}
-					res.json({usuarios :usuarios});
+			Usuario.find({ _id: { $not: { $eq: req.query.id } } , tipo: { $not: { $eq: "Admin" } } })
+			.exec((err, users)  => {
+				if(err) return res.json({Error: 'No se pudieron listar los usuarios debido al siguiente error: '+err.message});
+				
+				let usuarios = [];
+				for(u of users){
+					usuarios.push(getUser(u));
 				}
+				return res.json({usuarios :usuarios});
 			});
 
 		}else{
@@ -341,6 +338,9 @@ exports.usuariosSinRetar = (req,res) => {
 
 			if(retados.length != 0){
 				let coso = new Object();
+				coso.tipo = {};
+				coso.tipo.$nin = [];
+				coso.tipo.$nin.push("Admin"); 
 				coso._id = {};
 				coso._id.$nin = [];
 				coso._id.$nin.push(req.query.id);
@@ -351,12 +351,14 @@ exports.usuariosSinRetar = (req,res) => {
 
 				Usuario.find(coso,null,{sort:{puntaje: -1}})
 				.exec(function(error, usus){ 
-					if(error) console.log(error);
+					if(error) return res.json({Error:error});
 					let usuarios = [];
+
 					for(u of usus){
 						usuarios.push(getUser(u));
 					}
-					res.json({usuarios: usuarios});
+
+					return res.json({usuarios: usuarios});
 				});
 			}
 		}
