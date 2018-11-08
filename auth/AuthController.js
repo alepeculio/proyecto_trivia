@@ -9,6 +9,8 @@ var mongoose = require( 'mongoose' );
 const multiparty = require('multiparty');
 var fs = require( 'fs' );
 
+const index = require( '../index' );
+
 exports.authRegistro = ( req, res ) => {
 	crearUsuario( req, res, 'SinSuscripcion', 3, 0 );
 };

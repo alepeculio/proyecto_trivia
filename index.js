@@ -38,6 +38,8 @@ const server = app.listen( process.env.PORT || port, () => {
 const io = require( 'socket.io' )( server );
 
 let usuarios = [];
+let subsARanking = [];
+let ranking = [];
 
 io.on( 'connection', ( cliente ) => {
 	cliente.on( 'conectado', ( id ) => {
@@ -55,8 +57,34 @@ io.on( 'connection', ( cliente ) => {
 
 	cliente.on( 'disconnect', () => {
 		desconectar( cliente.id );
+		quitarDeRanking( cliente.id );
+	} );
+
+	cliente.on( 'sub-ranking', () => {
+		for ( let i = 0; i < subsARanking.length; i++ )
+			if ( subsARanking[i].socket.id == cliente.id )
+				return;
+
+		subsARanking.push( {
+			socket: cliente
+		} );
+
+		console.log( 'Ranking conectado ' + cliente.id );
+	} );
+
+	cliente.on( 'unsub-ranking', () => {
+		quitarDeRanking( cliente.id );
 	} );
 } );
+
+function quitarDeRanking( id ) {
+	for ( let i = 0; i < subsARanking.length; i++ )
+		if ( subsARanking[i].socket.id == id ) {
+			subsARanking.splice( i, 1 );
+			console.log( 'Ranking desconectado ' + id );
+			break;
+		}
+}
 
 function desconectar( id ) {
 	for ( let i = 0; i < usuarios.length; i++ )
@@ -100,4 +128,60 @@ exports.correo = ( para, titulo, mensaje ) => {
 		else
 			console.log( 'Correo enviado a ' + para );
 	} );
+}
+
+exports.llenarRanking = ( usus ) => {
+	for ( let i = 0; i < usus.length; i++ )
+		if ( usus[i].tipo != 'Admin' && usus[i].tipo != 'SinSuscripcion' )
+			ranking.push( {
+				id: usus[i]._id.toString(),
+				correo: usus[i].correo,
+				nombre: usus[i].nombre,
+				apellido: usus[i].apellido,
+				puntaje: usus[i].puntaje,
+				img: ( usus[i].img.data != undefined ) ? 'data:image/jpeg;base64,' + usus[i].img.data.toString( 'base64' ) : ''
+			} );
+}
+
+let puntajeCambio = false;
+
+exports.puntosCambiados = ( usuario ) => {
+	let esta = false;
+
+	for ( let i = 0; i < ranking.length; i++ )
+		if ( ranking[i].id == usuario._id.toString() ) {
+			ranking[i].puntaje = usuario.puntaje;
+			esta = true;
+			puntajeCambio = true;
+			break;
+		}
+
+	if ( !esta && ranking[ranking.length - 1].puntaje <= usuario.puntaje ) {
+		ranking.push( {
+			id: usuario._id.toString(),
+			correo: usuario.correo,
+			nombre: usuario.nombre,
+			apellido: usuario.apellido,
+			puntaje: usuario.puntaje,
+			img: ( usuario.img.data != undefined ) ? 'data:image/jpeg;base64,' + usuario.img.data.toString( 'base64' ) : ''
+		} );
+
+		if ( ranking.length > 10 )
+			ranking.pop();
+
+		puntajeCambio = true;
+	}
+}
+
+exports.reenviar = () => {
+	if ( puntajeCambio ) {
+		ranking.sort( ( r1, r2 ) => {
+			return r2.puntaje - r1.puntaje;
+		} );
+
+		for ( let i = 0; i < subsARanking.length; i++ )
+			subsARanking[i].socket.emit( 'nuevo-ranking', ranking );
+
+		puntajeCambio = false;
+	}
 }
