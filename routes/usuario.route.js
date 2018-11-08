@@ -29,5 +29,6 @@ router.get( '/authMe', VerifyToken, AuthController.authMe );
 router.post( '/authLogin', AuthController.authLogin );
 
 router.get( '/solicitar', usuario_controller.solicitar );
+router.get( '/hora', usuario_controller.hora );
 
 module.exports = router;

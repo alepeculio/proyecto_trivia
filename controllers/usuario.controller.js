@@ -123,9 +123,11 @@ exports.actualizarSuscripcion = (req, res) => {
 
 	Usuario.findOneAndUpdate(query,update)
 	.then( usuario => {
-		if ( req.body.tipo === 'Suscripcion' )
+		if ( req.body.tipo === 'Suscripcion' ){
+			console.log(usuario.correo);
 			mensajes.mensaje( usuario._id.toString(), '¡Suscripción aceptada!', 'Comienza a responder preguntas' );
-		else if ( req.body.tipo === 'SinSuscripcion' )
+			mensajes.correo( usuario.correo,'¡Suscripción aceptada!', '<b>Inicia sesión y comienza a responder preguntas!!!</b> <p>Tenemos premios increíbles...</p> \n\n https://triviatip.herokuapp.com/'  );
+		}else if ( req.body.tipo === 'SinSuscripcion' )
 			mensajes.mensaje( usuario._id.toString(), 'Suscripción finalizada :(', 'Solicita otra suscripción para seguir jugando' );
 
 		res.write(JSON.stringify({Mensaje: 'Suscripción actualizada correctamente'}));
@@ -215,6 +217,8 @@ exports.solicitar = ( req, res ) => {
 		for ( let i = 0; i < admins.length; i++ )
 			mensajes.correo( admins[i].correo, 'Solicitud de suscripción', '<b>Solicitud de ' + req.query.nombre + '</b>' );
 	} );
+
+	res.send( 'OK' );
 }
 
 //luis
@@ -223,7 +227,7 @@ exports.retos = (req, res) => {
 }
 
 function fechaActual() {
-	let hoy = new Date();
+	let hoy = getHora();
 	return hoy.getDate() + '-' + ( hoy.getMonth() + 1 ) + '-' + hoy.getFullYear();
 }
 
@@ -513,4 +517,14 @@ exports.finalizarDuelo = (req,res) => {
 
 		});
 
+}
+
+function getHora() {
+	let hora = new Date();
+	hora.setTime( new Date().getTime() - 10800000 );
+	return hora;
+}
+
+exports.hora = ( req, res ) => {
+	res.send( getHora() );
 }
