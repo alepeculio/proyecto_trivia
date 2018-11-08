@@ -31,6 +31,7 @@ router.post( '/authLogin', AuthController.authLogin );
 router.get( '/solicitar', usuario_controller.solicitar );
 router.get( '/hora', usuario_controller.hora );
 
-router.get( '/reset', usuario_controller.reset );
+router.post( '/reset', usuario_controller.reset );
+
 
 module.exports = router;

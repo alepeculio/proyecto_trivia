@@ -19,21 +19,37 @@ exports.registro = (req, res) => {
 }
 
 exports.reset = ( req, res ) => {
-	PreguntasRespondidas.remove( {}, ( err, pr ) => {
-		PreguntasDiarias.remove( {}, ( err, pd ) => {
-			ManoaMano.remove( {}, ( err, mam ) => {
-				Usuario.update( {}, {
-					puntaje: 0,
-					mmrestantes: 3
-				}, { multi: true }, ( err, resp ) => {
-					if ( err )
-						res.send( 'Error: ' + err );
-					else
-						res.send( 'OK' );
+	if ( req.body.correo === undefined || req.body.pass === undefined )
+		res.send( 'Error: envie correo y pass' );
+	else {
+		Usuario.count( {
+			correo: req.body.correo,
+			pass: req.body.pass,
+			tipo: 'Admin'
+		}, ( err, cantidad ) => {
+			if ( err )
+				res.send( 'Error: anda a saber...' );
+			else if ( cantidad <= 0 ) {
+				res.send( 'Error: no autorizado, salí de acá gil !!!' );
+			} else {
+				PreguntasRespondidas.remove( {}, ( err, pr ) => {
+					PreguntasDiarias.remove( {}, ( err, pd ) => {
+						ManoaMano.remove( {}, ( err, mam ) => {
+							Usuario.update( {}, {
+								puntaje: 0,
+								mmrestantes: 3
+							}, { multi: true }, ( err, resp ) => {
+								if ( err )
+									res.send( 'Error: ' + err );
+								else
+									res.send( 'OK' );
+							} );
+						} );
+					} );
 				} );
-			} );
+			}
 		} );
-	} );
+	}
 }
 
 function crearUsuario(req, res, tipo, mmrestantes, puntaje){
@@ -161,6 +177,9 @@ exports.actualizarSuscripcion = (req, res) => {
 			index.reenviar();
 
 		}else if ( req.body.tipo === 'SinSuscripcion' ) {
+
+			cargarIniciales( true );
+
 			index.mensaje( usuario._id.toString(), 'Suscripción finalizada :(', 'Solicita otra suscripción para seguir jugando' );
 		}
 
@@ -209,16 +228,24 @@ exports.listar = (req, res) => {
 	});
 }
 
-console.log( "Buscando usuarios" );
+function cargarIniciales( reenviar = false ) {
+	console.log( "Buscando usuarios" );
 
-Usuario.find( {}, null, {
-	sort: { puntaje: -1 }
-} ).limit( 10 ).exec( ( err, usuarios ) => {
-	if ( err )
-		console.log( err );
-	else
-		index.llenarRanking( usuarios );
-} );
+	Usuario.find( { tipo: 'Suscripcion' }, null, {
+		sort: { puntaje: -1 }
+	} ).limit( 10 ).exec( ( err, usuarios ) => {
+		if ( err )
+			console.log( err );
+		else {
+			index.llenarRanking( usuarios );
+
+			if ( reenviar )
+				index.reenviar( true );
+		}
+	} );
+}
+
+cargarIniciales();
 
 exports.iniciarSesion = (req, res) =>{
 	let correo = req.body.correo;

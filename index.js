@@ -131,6 +131,8 @@ exports.correo = ( para, titulo, mensaje ) => {
 }
 
 exports.llenarRanking = ( usus ) => {
+	ranking = [];
+
 	for ( let i = 0; i < usus.length; i++ )
 		if ( usus[i].tipo != 'Admin' && usus[i].tipo != 'SinSuscripcion' )
 			ranking.push( {
@@ -156,7 +158,7 @@ exports.puntosCambiados = ( usuario ) => {
 			break;
 		}
 
-	if ( !esta && ranking[ranking.length - 1].puntaje <= usuario.puntaje ) {
+	if ( !esta && ranking[ranking.length - 1].puntaje <= usuario.puntaje || !esta && ranking.length < 10 ) {
 		ranking.push( {
 			id: usuario._id.toString(),
 			correo: usuario.correo,
@@ -173,8 +175,8 @@ exports.puntosCambiados = ( usuario ) => {
 	}
 }
 
-exports.reenviar = () => {
-	if ( puntajeCambio ) {
+function reenviar( reenviarSioSi = false ) {
+	if ( puntajeCambio || reenviarSioSi ) {
 		ranking.sort( ( r1, r2 ) => {
 			return r2.puntaje - r1.puntaje;
 		} );
@@ -185,3 +187,5 @@ exports.reenviar = () => {
 		puntajeCambio = false;
 	}
 }
+
+exports.reenviar = reenviar;
