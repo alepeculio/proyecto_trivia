@@ -153,7 +153,6 @@ exports.actualizarSuscripcion = (req, res) => {
 	Usuario.findOneAndUpdate(query,update)
 	.then( usuario => {
 		if ( req.body.tipo === 'Suscripcion' ){
-			console.log(usuario.correo);
 			index.mensaje( usuario._id.toString(), '¡Suscripción aceptada!', 'Comienza a responder preguntas' );
 			index.correo( usuario.correo,'¡Suscripción aceptada!', '<b>Inicia sesión y comienza a responder preguntas!!!</b> <p>Tenemos premios increíbles...</p> \n\n https://triviatip.herokuapp.com/'  );
 
@@ -292,13 +291,13 @@ exports.cancelarReto = (req,res) => {
 }
 
 exports.listarRetos = (req,res) => {
-	ManoaMano.find({ID_retado: req.query.id, ID_ganador: null})
+	ManoaMano.find({ID_retado: req.query.id, ID_ganador: null, cant_correcta_retador: {$not: {$eq: null}}})
 	.exec(function(err,duels){
 
 		if(err) return res.json({Error: err});
 
 		if(duels.length == 0){
-			res.json({Mensaje: 'No hay duelos'});
+			return res.json({Mensaje: 'No hay duelos'});
 		}else{
 			let coso = new Object();
 			coso._id = {};
@@ -361,22 +360,19 @@ exports.listarRetosPropios = (req,res) => {
 exports.usuariosSinRetar = (req,res) => {
 	let retados = [];
 
+	ManoaMano.find({ $or: [ { ID_retador: req.query.id } , { ID_retado: req.query.id } ] , ID_ganador: null})
+	.exec(function(err,result){
 
-	ManoaMano.find({ $or: [ { ID_retador: req.query.id } , { ID_retado: req.query.id } ] , ID_ganador: null  }).exec(function(err,result){
-		res.statusCode = 200;
-		res.setHeader('Content-Type','application/json');
 		if(result.length == 0){
-			Usuario.find({ _id: { $not: { $eq: req.query.id } } , tipo: { $not: { $eq: "Admin" } } }).exec((err, users)  => {
-				if(err){
-					console.log(err);
-					res.json({Error: 'No se pudieron listar los usuarios debido al siguiente error: '+err.message});
-				}else{
-					let usuarios = [];
-					for(u of users){
-						usuarios.push(getUser(u));
-					}
-					res.json({usuarios :usuarios});
+			Usuario.find({ _id: { $not: { $eq: req.query.id } } , tipo: { $not: { $eq: "Admin" } } })
+			.exec((err, users)  => {
+				if(err) return res.json({Error: 'No se pudieron listar los usuarios debido al siguiente error: '+err.message});
+				
+				let usuarios = [];
+				for(u of users){
+					usuarios.push(getUser(u));
 				}
+				return res.json({usuarios :usuarios});
 			});
 
 		}else{
@@ -391,6 +387,9 @@ exports.usuariosSinRetar = (req,res) => {
 
 			if(retados.length != 0){
 				let coso = new Object();
+				coso.tipo = {};
+				coso.tipo.$nin = [];
+				coso.tipo.$nin.push("Admin"); 
 				coso._id = {};
 				coso._id.$nin = [];
 				coso._id.$nin.push(req.query.id);
@@ -401,12 +400,14 @@ exports.usuariosSinRetar = (req,res) => {
 
 				Usuario.find(coso,null,{sort:{puntaje: -1}})
 				.exec(function(error, usus){ 
-					if(error) console.log(error);
+					if(error) return res.json({Error:error});
 					let usuarios = [];
+
 					for(u of usus){
 						usuarios.push(getUser(u));
 					}
-					res.json({usuarios: usuarios});
+
+					return res.json({usuarios: usuarios});
 				});
 			}
 		}
@@ -422,10 +423,12 @@ exports.comenzarDuelo = (req,res) => {
 	ManoaMano.findOneAndUpdate(query,update, (err,duelo) => {
 		if(err) return res.json({Error: err});
 
-		index.mensaje( req.body.ID_retado, 'Duelo', 'El jugador ... te ha retado' );
+		Usuario.findOne({_id: req.body.ID_retador}, (err,usuario) =>{
 
-		return res.json({Mensaje: 'OK'});
+			index.mensaje( req.body.ID_retado, 'Duelo', 'El jugador '+ usuario.nombre + ' ' + usuario.apellido +'te ha retado' );
 
+			return res.json({Mensaje: 'OK'});
+		});
 	});
 }
 
@@ -460,7 +463,7 @@ exports.finalizarDuelo = (req,res) => {
 						index.reenviar();
 						// Perdio retado
 						index.mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste a ' + usuario2.nombre + ' ' + usuario2.apellido, 3 );
-						index.mensaje( req.body.ID_retado, 'Perdiste', 'Perdiste contra ...' + usuario.nombre + ' ' + usuario.apellido, -1 );
+						index.mensaje( req.body.ID_retado, 'Perdiste', 'Perdiste contra ' + usuario.nombre + ' ' + usuario.apellido, -1 );
 
 						return res.json("PERDISTE");	
 					});	
