@@ -446,7 +446,6 @@ exports.comenzarDuelo = (req,res) => {
 	let query = {ID_retador: req.body.ID_retador,ID_retado: req.body.ID_retado};
 
 	let update = {cant_correcta_retador: req.body.cant_correctas,tiempo_retador: req.body.tiempo};
-
 	ManoaMano.findOneAndUpdate(query,update, (err,duelo) => {
 		if(err) return res.json({Error: err});
 
@@ -546,12 +545,12 @@ exports.finalizarDuelo = (req,res) => {
 						Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc:{puntaje: -1}}, (err,usuario2) => {
 							if(err) return res.json({Error:err});
 
-						usuario.puntaje += 3;
-						usuario2.puntaje += -1;
+							usuario.puntaje += 3;
+							usuario2.puntaje += -1;
 
-						index.puntosCambiados( usuario );
-						index.puntosCambiados( usuario2 );
-						index.reenviar();
+							index.puntosCambiados( usuario );
+							index.puntosCambiados( usuario2 );
+							index.reenviar();
 						// Gano retado
 						index.mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste a '+ usuario2.nombre + ' ' + usuario2.apellido, 3 );
 						index.mensaje( req.body.ID_retador, 'Perdiste', 'Perdiste contra ' + usuario.nombre + ' ' + usuario.apellido, -1 );
