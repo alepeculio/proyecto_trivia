@@ -390,6 +390,8 @@ exports.usuariosSinRetar = (req,res) => {
 	ManoaMano.find({ $or: [ { ID_retador: req.query.id } , { ID_retado: req.query.id } ] , ID_ganador: null})
 	.exec(function(err,result){
 
+		if(err) return res.json({Error: err});
+
 		if(result.length == 0){
 			Usuario.find({ _id: { $not: { $eq: req.query.id } } , tipo: { $not: { $eq: "Admin" } } })
 			.exec((err, users)  => {
@@ -546,12 +548,12 @@ exports.finalizarDuelo = (req,res) => {
 						Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc:{puntaje: -1}}, (err,usuario2) => {
 							if(err) return res.json({Error:err});
 
-						usuario.puntaje += 3;
-						usuario2.puntaje += -1;
+							usuario.puntaje += 3;
+							usuario2.puntaje += -1;
 
-						index.puntosCambiados( usuario );
-						index.puntosCambiados( usuario2 );
-						index.reenviar();
+							index.puntosCambiados( usuario );
+							index.puntosCambiados( usuario2 );
+							index.reenviar();
 						// Gano retado
 						index.mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste a '+ usuario2.nombre + ' ' + usuario2.apellido, 3 );
 						index.mensaje( req.body.ID_retador, 'Perdiste', 'Perdiste contra ' + usuario.nombre + ' ' + usuario.apellido, -1 );
