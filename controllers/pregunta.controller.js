@@ -127,7 +127,7 @@ exports.preguntasDiarias = ( req, res ) => {
 					ids.push( diarias[i].ID_pregunta._id );	
 				}
 			}
-					
+			
 
 			// Buscar si fueron respondidas por ese usuario
 			PreguntasRespondidas.find( { ID_usuario: id_usu, ID_pregunta: { $in: ids } }, ( err, respondidas ) => {
@@ -491,7 +491,11 @@ exports.generarPreguntasDuelo = function(req, res){
 							Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc: {mmrestantes: -1}}, (err,usuario) =>{
 								if(err) return res.json({Error:err});
 
-								return res.send(preguntas);
+								let resultado = [];
+								resultado.push(preguntas[uno]);
+								resultado.push(preguntas[dos]);
+								resultado.push(preguntas[tres]);
+								return res.send(resultado);
 							});		
 						});
 					});
