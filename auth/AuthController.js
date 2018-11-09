@@ -81,10 +81,10 @@ exports.authMe = ( req, res, next ) => {
 
 		Usuario.findById( decoded.id, { pass: 0 }, ( err, usuario ) => {
 			if ( err )
-				return res.status( 500 ).send( 'Problema en la busqueda del usuario' );
+				return res.status( 500 ).send( { auth: false, message: 'Problema en la busqueda del usuario' } );
 
 			if ( !usuario )
-				return res.status( 404 ).send( 'No se encontró el usuario' );
+				return res.status( 404 ).send( { auth: false, message: 'No se encontró el usuario' } );
 
 			resetearDuelos(usuario);
 

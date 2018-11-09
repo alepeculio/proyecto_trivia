@@ -28,7 +28,7 @@ exports.reset = ( req, res ) => {
 			tipo: 'Admin'
 		}, ( err, cantidad ) => {
 			if ( err )
-				res.send( 'Error: anda a saber...' );
+				res.send( 'Error: ' + err );
 			else if ( cantidad <= 0 ) {
 				res.send( 'Error: no autorizado, salí de acá gil !!!' );
 			} else {
@@ -454,7 +454,7 @@ exports.comenzarDuelo = (req,res) => {
 
 		Usuario.findOne({_id: req.body.ID_retador}, (err,usuario) =>{
 
-			index.mensaje( req.body.ID_retado, 'Duelo', 'El jugador '+ usuario.nombre + ' ' + usuario.apellido +'te ha retado' );
+			index.mensaje( req.body.ID_retado, 'Duelo', 'El jugador '+ usuario.nombre + ' ' + usuario.apellido +' te ha retado' );
 
 			return res.json({Mensaje: 'OK'});
 		});
