@@ -28,7 +28,7 @@ exports.reset = ( req, res ) => {
 			tipo: 'Admin'
 		}, ( err, cantidad ) => {
 			if ( err )
-				res.send( 'Error: anda a saber...' );
+				res.send( 'Error: ' + err );
 			else if ( cantidad <= 0 ) {
 				res.send( 'Error: no autorizado, salí de acá gil !!!' );
 			} else {
