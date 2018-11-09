@@ -97,7 +97,7 @@ function resetearDuelos(usuario){
 	let hoy = fechaActual();
 	if(usuario.ultima_conexion !== undefined){
 		if(usuario.ultima_conexion !== hoy){
-			Usuario.findOneAndUpdate({_id: usuario._id}, {mmrestantes: 3}, ultima_conexion: hoy}, (err,usuario) =>{
+			Usuario.findOneAndUpdate({_id: usuario._id}, {mmrestantes: 3, ultima_conexion: hoy}, (err,usuario) =>{
 				if(err) console.log(err);
 			});
 		}
@@ -112,10 +112,10 @@ function resetearDuelos(usuario){
 exports.authLogin = ( req, res ) => {
 	Usuario.findOne( { correo: req.body.correo }, ( err, usuario ) => {
 		if ( err )
-			return res.status( 500 ).send( 'Error en el servidor' );
+			return res.status( 500 ).send( { auth: false, message: 'Error en el servidor' } );
 
 		if ( !usuario )
-			return res.status( 404 ).send( 'Usuario no encontrado' );
+			return res.status( 404 ).send( { auth: false, message: 'Usuario no encontrado' } );
 
 		var passwordIsValid = bcryptjs.compareSync( req.body.pass, usuario.pass );
 
