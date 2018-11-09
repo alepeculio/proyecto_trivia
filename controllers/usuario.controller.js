@@ -452,7 +452,7 @@ exports.comenzarDuelo = (req,res) => {
 
 		Usuario.findOne({_id: req.body.ID_retador}, (err,usuario) =>{
 
-			index.mensaje( req.body.ID_retado, 'Duelo', 'El jugador '+ usuario.nombre + ' ' + usuario.apellido +'te ha retado' );
+			index.mensaje( req.body.ID_retado, 'Duelo', 'El jugador '+ usuario.nombre + ' ' + usuario.apellido +' te ha retado' );
 
 			return res.json({Mensaje: 'OK'});
 		});
