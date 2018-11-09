@@ -3,11 +3,11 @@ var fs = require( 'fs' );
 var mongoose = require( 'mongoose' );
 const PreguntasRespondidas = require( '../models/preguntas_respondidas.model.js' );
 const PreguntasDiarias = require( '../models/preguntas_diarias.model.js' );
+const ManoaMano = require('../models/mano_a_mano.model');
 const Pregunta = require('../models/pregunta.model');
 const Usuario = require('../models/usuario.model');
 const Categoria = require('../models/categoria.model');
-const ManoaMano = require('../models/mano_a_mano.model');
-const mensajes = require( '../index' );
+const index = require( '../index' );
 
 var csv = require( 'csv-express' );
 
@@ -280,11 +280,21 @@ exports.cambiarEstado = (req,res)=>{
 		}
 
 		if ( update.estado === "Correcta" ) {
-			Usuario.update( { _id: usuario.ID_usuario }, { $inc: { puntaje: aumentoPorPregDiaria } }, ( err, usuario ) => {
+			Usuario.update( { _id: usuario.ID_usuario }, { $inc: { puntaje: aumentoPorPregDiaria } }, ( err, usuario2 ) => {
 				if ( err )
 					res.json( { Error: 'No se que pinto: ' + err.message } );
-				else 
-					res.json( { Mensaje: 'Correcto' } );
+				else  {
+
+					Usuario.findOne( { _id: req.body.ID_Usuario } ).exec( ( err, usu ) => {
+						if ( err )
+							res.json( { Error: 'No se que pinto: ' + err.message } );
+
+						index.puntosCambiados( usu );
+						index.reenviar();
+
+						res.json( { Mensaje: 'Correcto' } );
+					} );
+				}
 			} );
 		} else
 		res.json({Mensaje: 'Correcto'});
@@ -490,7 +500,7 @@ exports.generarPreguntasDuelo = function(req, res){
 			});
 
 		}else{
-			mensajes.mensaje(user._id.toString(), 'Mensaje', 'Excediste el límite de duelos por día,vuelve a intentarlo mañana!', );
+			index.mensaje(user._id.toString(), 'Mensaje', 'Excediste el límite de duelos por día,vuelve a intentarlo mañana!', );
 		}
 	});
 

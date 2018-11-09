@@ -4,7 +4,10 @@ const Usuario = require('../models/usuario.model');
 const multiparty = require('multiparty');
 const fs = require('fs');
 const ManoaMano = require('../models/mano_a_mano.model');
-const mensajes = require( '../index' );
+const index = require( '../index' );
+
+const PreguntasRespondidas = require( '../models/preguntas_respondidas.model.js' );
+const PreguntasDiarias = require( '../models/preguntas_diarias.model.js' );
 
 /*[Ale] ============================================================================================*/
 exports.inicio = (req, res) => {
@@ -13,6 +16,40 @@ exports.inicio = (req, res) => {
 
 exports.registro = (req, res) => {
 	crearUsuario(req,res, 'SinSuscripcion', 3, 0);
+}
+
+exports.reset = ( req, res ) => {
+	if ( req.body.correo === undefined || req.body.pass === undefined )
+		res.send( 'Error: envie correo y pass' );
+	else {
+		Usuario.count( {
+			correo: req.body.correo,
+			pass: req.body.pass,
+			tipo: 'Admin'
+		}, ( err, cantidad ) => {
+			if ( err )
+				res.send( 'Error: anda a saber...' );
+			else if ( cantidad <= 0 ) {
+				res.send( 'Error: no autorizado, salí de acá gil !!!' );
+			} else {
+				PreguntasRespondidas.remove( {}, ( err, pr ) => {
+					PreguntasDiarias.remove( {}, ( err, pd ) => {
+						ManoaMano.remove( {}, ( err, mam ) => {
+							Usuario.update( {}, {
+								puntaje: 0,
+								mmrestantes: 3
+							}, { multi: true }, ( err, resp ) => {
+								if ( err )
+									res.send( 'Error: ' + err );
+								else
+									res.send( 'OK' );
+							} );
+						} );
+					} );
+				} );
+			}
+		} );
+	}
 }
 
 function crearUsuario(req, res, tipo, mmrestantes, puntaje){
@@ -54,6 +91,10 @@ function crearUsuario(req, res, tipo, mmrestantes, puntaje){
 
 			usuario.save()
 			.then((u) => {
+
+				index.puntosCambiados( u );
+				index.reenviar();
+
 				res.json({Mensaje: 'Usuario agregado con éxito.'});
 			})
 			.catch((err) => {
@@ -107,6 +148,10 @@ exports.actualizar = (req, res) => {
 			res.json({Error: 'No se pudo actualizar el usuario debido al siguiente error: '+err.message});
 			return;
 		}
+
+		index.puntosCambiados( usuario );
+		index.reenviar();
+
 		res.json({Mensaje: 'Usuario actualizado correctamente'});
 	});
 }
@@ -124,11 +169,19 @@ exports.actualizarSuscripcion = (req, res) => {
 	Usuario.findOneAndUpdate(query,update)
 	.then( usuario => {
 		if ( req.body.tipo === 'Suscripcion' ){
-			console.log(usuario.correo);
-			mensajes.mensaje( usuario._id.toString(), '¡Suscripción aceptada!', 'Comienza a responder preguntas' );
-			mensajes.correo( usuario.correo,'¡Suscripción aceptada!', '<b>Inicia sesión y comienza a responder preguntas!!!</b> <p>Tenemos premios increíbles...</p> \n\n https://triviatip.herokuapp.com/'  );
-		}else if ( req.body.tipo === 'SinSuscripcion' )
-		mensajes.mensaje( usuario._id.toString(), 'Suscripción finalizada :(', 'Solicita otra suscripción para seguir jugando' );
+			index.mensaje( usuario._id.toString(), '¡Suscripción aceptada!', 'Comienza a responder preguntas' );
+			index.correo( usuario.correo,'¡Suscripción aceptada!', '<b>Inicia sesión y comienza a responder preguntas!!!</b> <p>Tenemos premios increíbles...</p> \n\n https://triviatip.herokuapp.com/'  );
+
+			usuario.tipo = 'Suscripcion';
+			index.puntosCambiados( usuario );
+			index.reenviar();
+
+		}else if ( req.body.tipo === 'SinSuscripcion' ) {
+
+			cargarIniciales( true );
+
+			index.mensaje( usuario._id.toString(), 'Suscripción finalizada :(', 'Solicita otra suscripción para seguir jugando' );
+		}
 
 		res.write(JSON.stringify({Mensaje: 'Suscripción actualizada correctamente'}));
 		res.end();
@@ -175,6 +228,25 @@ exports.listar = (req, res) => {
 	});
 }
 
+function cargarIniciales( reenviar = false ) {
+	console.log( "Buscando usuarios" );
+
+	Usuario.find( { tipo: 'Suscripcion' }, null, {
+		sort: { puntaje: -1 }
+	} ).limit( 10 ).exec( ( err, usuarios ) => {
+		if ( err )
+			console.log( err );
+		else {
+			index.llenarRanking( usuarios );
+
+			if ( reenviar )
+				index.reenviar( true );
+		}
+	} );
+}
+
+cargarIniciales();
+
 exports.iniciarSesion = (req, res) =>{
 	let correo = req.body.correo;
 	let pass = req.body.pass;
@@ -210,12 +282,12 @@ function getUser(u){
 /*[FIN Ale] ========================================================================================*/
 
 exports.solicitar = ( req, res ) => {
-	mensajes.mensaje( req.query.id, 'Solicitud realizada', 'Vea su correo para más información' );
-	mensajes.correo( req.query.correo, 'Solicitud realizada', '<b>Para realizar el pago diríjase al laboratorio 1 del TIP</b><p>Hable con uno de los estudiantes del taller de .NET responsables del desarrollo del juego.</p>' );
+	index.mensaje( req.query.id, 'Solicitud realizada', 'Vea su correo para más información' );
+	index.correo( req.query.correo, 'Solicitud realizada', '<b>Para realizar el pago diríjase al laboratorio 1 del TIP</b><p>Hable con uno de los estudiantes del taller de .NET responsables del desarrollo del juego.</p>' );
 
 	Usuario.find( { tipo: 'Admin' } ).exec( ( err, admins ) => {
 		for ( let i = 0; i < admins.length; i++ )
-			mensajes.correo( admins[i].correo, 'Solicitud de suscripción', '<b>Solicitud de ' + req.query.nombre + '</b>' );
+			index.correo( admins[i].correo, 'Solicitud de suscripción', '<b>Solicitud de ' + req.query.nombre + '</b>' );
 	} );
 
 	res.send( 'OK' );
@@ -380,7 +452,7 @@ exports.comenzarDuelo = (req,res) => {
 
 		Usuario.findOne({_id: req.body.ID_retador}, (err,usuario) =>{
 
-			mensajes.mensaje( req.body.ID_retado, 'Duelo', 'El jugador '+ usuario.nombre + ' ' + usuario.apellido +'te ha retado' );
+			index.mensaje( req.body.ID_retado, 'Duelo', 'El jugador '+ usuario.nombre + ' ' + usuario.apellido +'te ha retado' );
 
 			return res.json({Mensaje: 'OK'});
 		});
@@ -410,9 +482,15 @@ exports.finalizarDuelo = (req,res) => {
 					Usuario.findOneAndUpdate({_id: req.body.ID_retado},{$inc: {puntaje: -1}}, (err,usuario2) =>{
 						if(err) return res.json({Error:err});
 
+						usuario.puntaje += 3;
+						usuario2.puntaje += -1;
+
+						index.puntosCambiados( usuario );
+						index.puntosCambiados( usuario2 );
+						index.reenviar();
 						// Perdio retado
-						mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste a ' + usuario2.nombre + ' ' + usuario2.apellido, 3 );
-						mensaje( req.body.ID_retado, 'Perdiste', 'Perdiste contra ' + usuario.nombre + ' ' + usuario.apellido, -1 );
+						index.mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste a ' + usuario2.nombre + ' ' + usuario2.apellido, 3 );
+						index.mensaje( req.body.ID_retado, 'Perdiste', 'Perdiste contra ' + usuario.nombre + ' ' + usuario.apellido, -1 );
 
 						return res.json("PERDISTE");	
 					});	
@@ -435,9 +513,15 @@ exports.finalizarDuelo = (req,res) => {
 					Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc:{puntaje: -1}}, (err,usuario2) => {
 						if(err) return res.json({Error:err});
 
+						usuario.puntaje += 3;
+						usuario2.puntaje += -1;
+
+						index.puntosCambiados( usuario );
+						index.puntosCambiados( usuario2 );
+						index.reenviar();
 						// Gano retado
-						mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste a '+ usuario2.nombre + ' ' + usuario2.apellido, 3 );
-						mensaje( req.body.ID_retador, 'Perdiste', 'Perdiste contra ' + usuario.nombre + ' ' + usuario.apellido, -1 );
+						index.mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste a '+ usuario2.nombre + ' ' + usuario2.apellido, 3 );
+						index.mensaje( req.body.ID_retador, 'Perdiste', 'Perdiste contra ' + usuario.nombre + ' ' + usuario.apellido, -1 );
 
 						return res.json("GANASTE");
 					});
@@ -462,9 +546,15 @@ exports.finalizarDuelo = (req,res) => {
 						Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc:{puntaje: -1}}, (err,usuario2) => {
 							if(err) return res.json({Error:err});
 
+						usuario.puntaje += 3;
+						usuario2.puntaje += -1;
+
+						index.puntosCambiados( usuario );
+						index.puntosCambiados( usuario2 );
+						index.reenviar();
 						// Gano retado
-						mensajes.mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste a '+ usuario2.nombre + ' ' + usuario2.apellido, 3 );
-						mensajes.mensaje( req.body.ID_retador, 'Perdiste', 'Perdiste contra ' + usuario.nombre + ' ' + usuario.apellido, -1 );
+						index.mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste a '+ usuario2.nombre + ' ' + usuario2.apellido, 3 );
+						index.mensaje( req.body.ID_retador, 'Perdiste', 'Perdiste contra ' + usuario.nombre + ' ' + usuario.apellido, -1 );
 
 						return res.json("GANASTE");//por tiempo
 					});
@@ -487,9 +577,15 @@ exports.finalizarDuelo = (req,res) => {
 						Usuario.findOneAndUpdate({_id: req.body.ID_retado},{$inc: {puntaje: -1 }}, (err,usuario2) =>{
 							if(err) return res.json({Error: err});
 
+							usuario.puntaje += 3;
+							usuario2.puntaje += -1;
+
+							index.puntosCambiados( usuario );
+							index.puntosCambiados( usuario2 );
+							index.reenviar();
 							// Perdio el retado
-							mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste por tiempo a '+ usuario2.nombre + ' ' + usuario2.apellido, 3 );
-							mensaje( req.body.ID_retado, 'Perdiste', 'Perdiste por tiempo contra '+ usuario.nombre + ' ' + usuario.apellido, -1 );
+							index.mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste por tiempo a '+ usuario2.nombre + ' ' + usuario2.apellido, 3 );
+							index.mensaje( req.body.ID_retado, 'Perdiste', 'Perdiste por tiempo contra '+ usuario.nombre + ' ' + usuario.apellido, -1 );
 
 							return res.json("PERDISTE"); //por tiempo
 						});
@@ -507,8 +603,8 @@ exports.finalizarDuelo = (req,res) => {
 
 							Usuario.findOne({_id: req.body.ID_retado}, (err,usuario2) => {
 								// Empataron
-								mensaje( req.body.ID_retador, 'Empate', 'Empataste con '+ usuario2.nombre + ' ' + usuario2.apellido);
-								mensaje( req.body.ID_retado, 'Empate', 'Empataste con '+  usuario.nombre + ' ' + usuario.apellido);
+								index.mensaje( req.body.ID_retador, 'Empate', 'Empataste con '+ usuario2.nombre + ' ' + usuario2.apellido);
+								index.mensaje( req.body.ID_retado, 'Empate', 'Empataste con '+  usuario.nombre + ' ' + usuario.apellido);
 
 								return res.json("EMPATE");
 							});
