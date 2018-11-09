@@ -97,7 +97,7 @@ function resetearDuelos(usuario){
 	let hoy = fechaActual();
 	if(usuario.ultima_conexion !== undefined){
 		if(usuario.ultima_conexion !== hoy){
-			Usuario.findOneAndUpdate({_id: usuario._id}, {mmrestantes: 3, ultima_conexion: hoy}, (err,usuario) =>{
+			Usuario.findOneAndUpdate({_id: usuario._id}, {mmrestantes: 3 , ultima_conexion: hoy}, (err,usuario) =>{
 				if(err) console.log(err);
 			});
 		}
