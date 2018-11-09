@@ -155,6 +155,61 @@ exports.actualizar = (req, res) => {
 		res.json({Mensaje: 'Usuario actualizado correctamente'});
 	});
 }
+exports.actualizarPass = (req, res) => {
+	var hashedPassword = bcryptjs.hashSync( req.body.newpass, 8 );
+	let update = {
+		pass: hashedPassword
+	}
+	Usuario.findOne({ correo: req.body.correo }, (err,usuario) =>{
+		var passwordIsValid = bcryptjs.compareSync( req.body.anterior, usuario.pass );
+		if ( !passwordIsValid ){
+			res.json({Mensaje: "no"});
+		}else{
+			let query ={ correo: req.body.correo };
+			Usuario.findOneAndUpdate(query,update, (err, usuario) => {
+				if(err){
+					console.log(err);
+					res.json({Error: 'No se pudo actualizar el usuario debido al siguiente error: '+err.message});
+					return;
+				}
+
+				res.json({Mensaje: 'si'});
+			});
+
+		}
+
+		
+	});
+}
+
+
+exports.enviarPass = (req, res) => {
+
+	var caracteres = "abcdefghijkmnpqrtuvwxyzABCDEFGHIJKLMNPQRTUVWXYZ2346789";
+	var passTemporal = "";
+	for (i=0; i<8; i++) passTemporal += caracteres.charAt(Math.floor(Math.random()*caracteres.length));
+
+		index.correo(req.body.correo,"Contraseña temporal","Ingrese a triviatip con la contraseña temporal y vaya a su perfil para cambiarla. Su Contraseña temporal es: "+passTemporal);
+	let query = { correo: req.body.correo };
+	var hashedPassword = bcryptjs.hashSync(passTemporal , 8 );
+	let update = {
+		pass: hashedPassword
+	}
+
+	Usuario.findOneAndUpdate(query,update, (err, usuario) => {
+		if(err){
+			console.log(err);
+			res.json({Error: 'No se pudo actualizar la contraseña debido al siguiente error: '+err.message});
+			return;
+		}
+		res.json({Mensaje: 'Contraseña actualizado correctamente'});
+	});
+	
+
+
+}
+
+
 
 exports.actualizarSuscripcion = (req, res) => {
 	let query = { correo: req.body.correo };
