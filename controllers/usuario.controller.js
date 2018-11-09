@@ -15,7 +15,7 @@ exports.inicio = (req, res) => {
 }
 
 exports.registro = (req, res) => {
-	crearUsuario(req,res, 'SinSuscripcion', 3, 0);
+	crearUsuario(req,res, 'Suscripcion', 3, 0);
 }
 
 exports.reset = ( req, res ) => {
