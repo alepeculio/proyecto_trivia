@@ -45,6 +45,14 @@ let mensajesNoEnviados = [];
 
 io.on( 'connection', ( cliente ) => {
 	cliente.on( 'conectado', ( id ) => {
+		for ( let i = 0; i < usuarios.length; i++ )
+			if ( usuarios[i].id == id ) {
+				console.log( 'Cliente con doble conexión ' + id + ', desconectado...' );
+				usuarios[i].socket.emit( 'desconectar' );
+				usuarios[i].socket = cliente;
+				return;
+			}
+
 		usuarios.push( {
 			socket: cliente,
 			id: id
