@@ -41,6 +41,8 @@ let usuarios = [];
 let subsARanking = [];
 let ranking = [];
 
+let mensajesNoEnviados = [];
+
 io.on( 'connection', ( cliente ) => {
 	cliente.on( 'conectado', ( id ) => {
 		usuarios.push( {
@@ -49,6 +51,13 @@ io.on( 'connection', ( cliente ) => {
 		} );
 
 		console.log( 'Cliente conectado, id = ' + id + ', socket = ' + cliente.id );
+
+		for ( let i = mensajesNoEnviados.length - 1; i >= 0; i-- )
+			if ( mensajesNoEnviados[i].id == id ) {
+				mensajesNoEnviados[i].mensaje.puntos = 0;
+				cliente.emit( 'mensaje', mensajesNoEnviados[i].mensaje );
+				mensajesNoEnviados.splice( i, 1 );
+			}
 	} );
 
 	cliente.on( 'desconectar', () => {
@@ -82,7 +91,7 @@ function quitarDeRanking( id ) {
 		if ( subsARanking[i].socket.id == id ) {
 			subsARanking.splice( i, 1 );
 			console.log( 'Ranking desconectado ' + id );
-			break;
+			return;
 		}
 }
 
@@ -91,18 +100,29 @@ function desconectar( id ) {
 		if ( usuarios[i].socket.id === id ) {
 			console.log( 'Cliente desconectado, id = ' + usuarios[i].id + ', socket = ' + id );
 			usuarios.splice( i, 1 );
-			break;
+			return;
 		}
 }
 
 exports.mensaje = ( id, titulo, mensaje, puntos = 0 ) => {
+	let json = {
+		titulo: titulo,
+		contenido: mensaje,
+		puntos: puntos
+	};
+
 	for ( let i = 0; i < usuarios.length; i++ )
-		if ( usuarios[i].id === id )
-			usuarios[i].socket.emit( 'mensaje', {
-				titulo: titulo,
-				contenido: mensaje,
-				puntos: puntos
-			} );
+		if ( usuarios[i].id === id ) {
+			usuarios[i].socket.emit( 'mensaje', json );
+			return;
+		}
+
+	console.log( 'Guardando mensaje para ' + id );
+
+	mensajesNoEnviados.push( {
+		id: id,
+		mensaje: json
+	} );
 }
 
 let nodemailer = require( 'nodemailer' );

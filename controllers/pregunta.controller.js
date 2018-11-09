@@ -113,21 +113,18 @@ exports.preguntasDiarias = ( req, res ) => {
 	}
 
 	// Buscar las preguntas diarias del usuario en la fecha actual
-	PreguntasDiarias.find( { ID_usuario: id_usu, fecha: fechaActual() } ).populate( {
-		path: 'ID_pregunta',
-		populate: { path: 'categoria' }
-	} ).sort( 'position' ).exec( ( err, diarias ) => {
+	PreguntasDiarias.find( { ID_usuario: id_usu, fecha: fechaActual() } )
+	.sort( 'position' ).exec( ( err, diarias ) => {
 		if ( err ) {
 			error( res, err );
 		} else {
 			// Obtener las id de las preguntas diarias de hoy
 			let ids = [];
 			for ( let i = 0; i < diarias.length; i++ ){
-				if(diarias[i].ID_pregunta != null){
+				if ( diarias[i].ID_pregunta != null ) {
 					ids.push( diarias[i].ID_pregunta._id );	
 				}
 			}
-			
 
 			// Buscar si fueron respondidas por ese usuario
 			PreguntasRespondidas.find( { ID_usuario: id_usu, ID_pregunta: { $in: ids } }, ( err, respondidas ) => {
@@ -145,7 +142,7 @@ exports.preguntasDiarias = ( req, res ) => {
 						// Recorremos las respondidas
 						for ( let j = 0; j < respondidas.length; j++ )
 							// Si encontramos esa pregunta entre las respondidas
-						if ( diarias[i].ID_pregunta._id.equals( respondidas[j].ID_pregunta ) ) {
+							if ( diarias[i].ID_pregunta._id.equals( respondidas[j].ID_pregunta ) ) {
 								// Guardamos su estado
 								estado = respondidas[j].estado;
 								// La quitamos de la lista para no recorrer tanto la siguiente vez
@@ -521,9 +518,9 @@ exports.obtenerPreguntasDuelo = function(req,res){
 
 		let q = new Object();
 		q.$or = [];
-		q.$or.push({_id:duelo.preguntas[0]});
-		q.$or.push({_id:duelo.preguntas[1]});
 		q.$or.push({_id:duelo.preguntas[2]});
+		q.$or.push({_id:duelo.preguntas[1]});
+		q.$or.push({_id:duelo.preguntas[0]});
 
 		Pregunta.find(q).exec(function(err,preguntas){
 			if(err) return res.json({Error: err});
