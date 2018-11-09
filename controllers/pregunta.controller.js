@@ -127,7 +127,7 @@ exports.preguntasDiarias = ( req, res ) => {
 					ids.push( diarias[i].ID_pregunta._id );	
 				}
 			}
-			
+
 
 			// Buscar si fueron respondidas por ese usuario
 			PreguntasRespondidas.find( { ID_usuario: id_usu, ID_pregunta: { $in: ids } }, ( err, respondidas ) => {
@@ -521,9 +521,9 @@ exports.obtenerPreguntasDuelo = function(req,res){
 
 		let q = new Object();
 		q.$or = [];
-		q.$or.push({_id:duelo.preguntas[0]});
-		q.$or.push({_id:duelo.preguntas[1]});
 		q.$or.push({_id:duelo.preguntas[2]});
+		q.$or.push({_id:duelo.preguntas[1]});
+		q.$or.push({_id:duelo.preguntas[0]});
 
 		Pregunta.find(q).exec(function(err,preguntas){
 			if(err) return res.json({Error: err});
