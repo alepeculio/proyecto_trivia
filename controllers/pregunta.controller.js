@@ -453,10 +453,15 @@ exports.generarPreguntasDuelo = function(req, res){
 					}
 
 
-					Pregunta.find(coso).limit(3).exec(function(err,preguntas){
+					Pregunta.find(coso).exec(function(err,preguntas){
 
 						if(err) return res.json({Error: err});
 
+						let uno  = Math.floor( Math.random() * preguntas.length );
+
+						let dos = Math.floor( Math.random() * preguntas.length );
+
+						let tres = Math.floor( Math.random() * preguntas.length );
 
 						let mano_a_mano = new ManoaMano({
 							_id: new mongoose.Types.ObjectId(),
@@ -467,7 +472,7 @@ exports.generarPreguntasDuelo = function(req, res){
 							cant_correcta_retador: "",
 							tiempo_retador: null,
 							fecha: fechaActual(),
-							preguntas: [preguntas[0]._id,preguntas[1]._id,preguntas[2]._id]
+							preguntas: [preguntas[uno]._id,preguntas[dos]._id,preguntas[tres]._id]
 						});
 
 						mano_a_mano.save( (err) => {
