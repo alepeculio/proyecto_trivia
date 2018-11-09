@@ -445,6 +445,8 @@ exports.usuariosSinRetar = (req,res) => {
 	ManoaMano.find({ $or: [ { ID_retador: req.query.id } , { ID_retado: req.query.id } ] , ID_ganador: null})
 	.exec(function(err,result){
 
+		if(err) return res.json({Error: err});
+
 		if(result.length == 0){
 			Usuario.find({ _id: { $not: { $eq: req.query.id } } , tipo: { $not: { $eq: "Admin" } } })
 			.exec((err, users)  => {
