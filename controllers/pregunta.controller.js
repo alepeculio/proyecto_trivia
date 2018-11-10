@@ -502,6 +502,7 @@ exports.generarPreguntasDuelo = function(req, res){
 
 		}else{
 			index.mensaje(user._id.toString(), 'Mensaje', 'Excediste el límite de duelos por día,vuelve a intentarlo mañana!', );
+			return es.json({Mensaje: 'Excediste el límite'});
 		}
 	});
 
