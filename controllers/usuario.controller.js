@@ -287,6 +287,29 @@ exports.listar = (req, res) => {
 	});
 }
 
+
+exports.listarRanking = (req, res) => {
+	let cantidad = req.query.cantidad;
+	if(cantidad != undefined){
+		cantidad = Number(cantidad);
+	}
+
+	Usuario.find({ tipo: 'Suscripcion' }, null, {sort:{puntaje: -1}}).limit(cantidad).exec((err, users)  => {
+		if(err){
+			console.log(err);
+			res.json({Error: 'No se pudieron listar los usuarios debido al siguiente error: '+err.message});
+		}else if(users.length == 0){
+			res.json({Mensaje: 'No hay usuarios'});
+		}else{
+			let usuarios = [];
+			for(u of users){
+				usuarios.push(getUser(u));
+			}
+			res.json({usuarios :usuarios});
+		}
+	});
+}
+
 function cargarIniciales( reenviar = false ) {
 	console.log( "Buscando usuarios" );
 
