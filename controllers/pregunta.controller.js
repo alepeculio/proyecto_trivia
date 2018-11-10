@@ -241,7 +241,7 @@ exports.generarPreguntaDiaria = ( req, res ) => {
 
 function fechaActual() {
 	let hoy = getHora();
-	return hoy.getDate() + '-' + ( hoy.getMonth() + 1 ) + '-' + hoy.getFullYear();
+	return hoy.getUTCDate() + '-' + ( hoy.getUTCMonth() + 1 ) + '-' + hoy.getUTCFullYear();
 }
 
 exports.usuarioRespondio = ( req, res ) => {

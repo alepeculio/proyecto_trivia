@@ -382,7 +382,7 @@ exports.retos = (req, res) => {
 
 function fechaActual() {
 	let hoy = getHora();
-	return hoy.getDate() + '-' + ( hoy.getMonth() + 1 ) + '-' + hoy.getFullYear();
+	return hoy.getUTCDate() + '-' + ( hoy.getUTCMonth() + 1 ) + '-' + hoy.getUTCFullYear();
 }
 
 exports.cancelarReto = (req,res) => {
@@ -707,5 +707,8 @@ function getHora() {
 }
 
 exports.hora = ( req, res ) => {
-	res.send( getHora() );
+	res.send( {
+		hora: getHora(),
+		fecha: fechaActual()
+	} );
 }
