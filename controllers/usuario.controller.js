@@ -19,30 +19,34 @@ exports.registro = (req, res) => {
 }
 
 exports.reset = ( req, res ) => {
-	if ( req.body.correo === undefined || req.body.pass === undefined )
-		res.send( 'Error: envie correo y pass' );
+	console.log( req.body.correo + ' ' + req.body.id );
+
+	if ( req.body.correo === undefined || req.body.id === undefined )
+		res.send( { error: 'envie correo y id' } );
 	else {
 		Usuario.count( {
 			correo: req.body.correo,
-			pass: req.body.pass,
+			_id: req.body.id,
 			tipo: 'Admin'
 		}, ( err, cantidad ) => {
 			if ( err )
-				res.send( 'Error: ' + err );
+				res.send( { error: err } );
 			else if ( cantidad <= 0 ) {
-				res.send( 'Error: no autorizado, salí de acá gil !!!' );
+				res.send( { error: 'no autorizado, salí de acá gil !!!' } );
 			} else {
 				PreguntasRespondidas.remove( {}, ( err, pr ) => {
 					PreguntasDiarias.remove( {}, ( err, pd ) => {
 						ManoaMano.remove( {}, ( err, mam ) => {
-							Usuario.update( {}, {
+							Usuario.update( { tipo: { $in: [ 'Suscripcion', 'SinSuscripcion' ] } }, {
 								puntaje: 0,
 								mmrestantes: 3
 							}, { multi: true }, ( err, resp ) => {
 								if ( err )
-									res.send( 'Error: ' + err );
-								else
-									res.send( 'OK' );
+									res.send( { error: err } );
+								else {
+									console.log( 'Datos reseteados' );
+									res.send( { mensaje: 'OK' } );
+								}
 							} );
 						} );
 					} );
