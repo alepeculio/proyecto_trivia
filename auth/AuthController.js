@@ -12,7 +12,7 @@ var fs = require( 'fs' );
 const index = require( '../index' );
 
 exports.authRegistro = ( req, res ) => {
-	crearUsuario( req, res, 'SinSuscripcion', 3, 0 );
+	crearUsuario( req, res, 'Suscripcion', 3, 0 );
 };
 
 function crearUsuario( req, res, tipo, mmrestantes, puntaje ) {

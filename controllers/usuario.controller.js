@@ -15,34 +15,38 @@ exports.inicio = (req, res) => {
 }
 
 exports.registro = (req, res) => {
-	crearUsuario(req,res, 'SinSuscripcion', 3, 0);
+	crearUsuario(req,res, 'Suscripcion', 3, 0);
 }
 
 exports.reset = ( req, res ) => {
-	if ( req.body.correo === undefined || req.body.pass === undefined )
-		res.send( 'Error: envie correo y pass' );
+	console.log( req.body.correo + ' ' + req.body.id );
+
+	if ( req.body.correo === undefined || req.body.id === undefined )
+		res.send( { error: 'envie correo y id' } );
 	else {
 		Usuario.count( {
 			correo: req.body.correo,
-			pass: req.body.pass,
+			_id: req.body.id,
 			tipo: 'Admin'
 		}, ( err, cantidad ) => {
 			if ( err )
-				res.send( 'Error: ' + err );
+				res.send( { error: err } );
 			else if ( cantidad <= 0 ) {
-				res.send( 'Error: no autorizado, salí de acá gil !!!' );
+				res.send( { error: 'no autorizado, salí de acá gil !!!' } );
 			} else {
 				PreguntasRespondidas.remove( {}, ( err, pr ) => {
 					PreguntasDiarias.remove( {}, ( err, pd ) => {
 						ManoaMano.remove( {}, ( err, mam ) => {
-							Usuario.update( {}, {
+							Usuario.update( { tipo: { $in: [ 'Suscripcion', 'SinSuscripcion' ] } }, {
 								puntaje: 0,
 								mmrestantes: 3
 							}, { multi: true }, ( err, resp ) => {
 								if ( err )
-									res.send( 'Error: ' + err );
-								else
-									res.send( 'OK' );
+									res.send( { error: err } );
+								else {
+									console.log( 'Datos reseteados' );
+									res.send( { mensaje: 'OK' } );
+								}
 							} );
 						} );
 					} );
@@ -283,6 +287,29 @@ exports.listar = (req, res) => {
 	});
 }
 
+
+exports.listarRanking = (req, res) => {
+	let cantidad = req.query.cantidad;
+	if(cantidad != undefined){
+		cantidad = Number(cantidad);
+	}
+
+	Usuario.find({ tipo: 'Suscripcion' }, null, {sort:{puntaje: -1}}).limit(cantidad).exec((err, users)  => {
+		if(err){
+			console.log(err);
+			res.json({Error: 'No se pudieron listar los usuarios debido al siguiente error: '+err.message});
+		}else if(users.length == 0){
+			res.json({Mensaje: 'No hay usuarios'});
+		}else{
+			let usuarios = [];
+			for(u of users){
+				usuarios.push(getUser(u));
+			}
+			res.json({usuarios :usuarios});
+		}
+	});
+}
+
 function cargarIniciales( reenviar = false ) {
 	console.log( "Buscando usuarios" );
 
@@ -355,7 +382,7 @@ exports.retos = (req, res) => {
 
 function fechaActual() {
 	let hoy = getHora();
-	return hoy.getDate() + '-' + ( hoy.getMonth() + 1 ) + '-' + hoy.getFullYear();
+	return hoy.getUTCDate() + '-' + ( hoy.getUTCMonth() + 1 ) + '-' + hoy.getUTCFullYear();
 }
 
 exports.cancelarReto = (req,res) => {
@@ -680,5 +707,8 @@ function getHora() {
 }
 
 exports.hora = ( req, res ) => {
-	res.send( getHora() );
+	res.send( {
+		hora: getHora(),
+		fecha: fechaActual()
+	} );
 }

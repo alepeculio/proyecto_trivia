@@ -241,7 +241,7 @@ exports.generarPreguntaDiaria = ( req, res ) => {
 
 function fechaActual() {
 	let hoy = getHora();
-	return hoy.getDate() + '-' + ( hoy.getMonth() + 1 ) + '-' + hoy.getFullYear();
+	return hoy.getUTCDate() + '-' + ( hoy.getUTCMonth() + 1 ) + '-' + hoy.getUTCFullYear();
 }
 
 exports.usuarioRespondio = ( req, res ) => {
@@ -502,6 +502,7 @@ exports.generarPreguntasDuelo = function(req, res){
 
 		}else{
 			index.mensaje(user._id.toString(), 'Mensaje', 'Excediste el límite de duelos por día,vuelve a intentarlo mañana!', );
+			return res.json({Mensaje: 'Excediste el límite'});
 		}
 	});
 
