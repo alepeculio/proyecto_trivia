@@ -542,29 +542,19 @@ exports.comenzarDuelo = (req,res) => {
 	});
 }
 
-exports.finalizarDuelo = (req,res) => {
-	let correctas = req.body.cant_correctas;
-	let tiempo = req.body.tiempo;
-	let query = {ID_retador: req.body.ID_retador,ID_retado: req.body.ID_retado, ID_ganador: null};
+exports.finDuelo = ( correctas, tiempo, retador, retado ) => {
+	let query = {ID_retador: retador,ID_retado: retado, ID_ganador: null};
 
 	ManoaMano.findOne(query).exec(function(err,duelo){
-		if(err) return res.json({Error: err});
-
 		if(correctas < duelo.cant_correcta_retador){
 			//gano el retador
-			Usuario.findOneAndUpdate({_id: req.body.ID_retador}, {$inc: {puntaje: 3}}, (err,usuario) => {
-				if(err) return res.json({Error: err});
-
+			Usuario.findOneAndUpdate({_id: retador}, {$inc: {puntaje: 3}}, (err,usuario) => {
 				let update = {
 					ID_ganador: duelo.ID_retador,ID_perdedor: duelo.ID_retado
 				};
 
 				ManoaMano.findOneAndUpdate({_id: duelo._id},update,(err,duelo) => {
-					if(err) return res.json({Error:err});
-
-					Usuario.findOneAndUpdate({_id: req.body.ID_retado},{$inc: {puntaje: -1}}, (err,usuario2) =>{
-						if(err) return res.json({Error:err});
-
+					Usuario.findOneAndUpdate({_id: retado},{$inc: {puntaje: -1}}, (err,usuario2) =>{
 						usuario.puntaje += 3;
 						usuario2.puntaje += -1;
 
@@ -572,30 +562,22 @@ exports.finalizarDuelo = (req,res) => {
 						index.puntosCambiados( usuario2 );
 						index.reenviar();
 						// Perdio retado
-						index.mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste a ' + usuario2.nombre + ' ' + usuario2.apellido, 3 );
-						index.mensaje( req.body.ID_retado, 'Perdiste', 'Perdiste contra ' + usuario.nombre + ' ' + usuario.apellido, -1 );
-
-						return res.json("PERDISTE");	
+						index.mensaje( retador, 'Ganaste', 'Ganaste a ' + usuario2.nombre + ' ' + usuario2.apellido, 3 );
+						index.mensaje( retado, 'Perdiste', 'Perdiste contra ' + usuario.nombre + ' ' + usuario.apellido, -1 );
 					});	
 				});
 			});
 
 		}else if(correctas > duelo.cant_correcta_retador){
 			//gano el retado
-			Usuario.findOneAndUpdate({_id: req.body.ID_retado}, {$inc: {puntaje: 3}}, (err,usuario) => {
-				if(err) return res.json({Error: err});
-
+			Usuario.findOneAndUpdate({_id: retado}, {$inc: {puntaje: 3}}, (err,usuario) => {
 				let update2 = {
 					ID_ganador: duelo.ID_retado, ID_perdedor: duelo.ID_retador,
 					cant_correcta_retador: correctas, tiempo_retador: tiempo
 				};
 
 				ManoaMano.findOneAndUpdate({_id: duelo._id}, update2, (err,duelo) =>{
-					if(err) return res.json({Error:err});
-
-					Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc:{puntaje: -1}}, (err,usuario2) => {
-						if(err) return res.json({Error:err});
-
+					Usuario.findOneAndUpdate({_id: retador},{$inc:{puntaje: -1}}, (err,usuario2) => {
 						usuario.puntaje += 3;
 						usuario2.puntaje += -1;
 
@@ -603,10 +585,8 @@ exports.finalizarDuelo = (req,res) => {
 						index.puntosCambiados( usuario2 );
 						index.reenviar();
 						// Gano retado
-						index.mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste a '+ usuario2.nombre + ' ' + usuario2.apellido, 3 );
-						index.mensaje( req.body.ID_retador, 'Perdiste', 'Perdiste contra ' + usuario.nombre + ' ' + usuario.apellido, -1 );
-
-						return res.json("GANASTE");
+						index.mensaje( retado, 'Ganaste', 'Ganaste a '+ usuario2.nombre + ' ' + usuario2.apellido, 3 );
+						index.mensaje( retador, 'Perdiste', 'Perdiste contra ' + usuario.nombre + ' ' + usuario.apellido, -1 );
 					});
 				});
 			});
@@ -615,20 +595,14 @@ exports.finalizarDuelo = (req,res) => {
 
 			if(tiempo  < duelo.tiempo_retador){
 				//gano el retado
-				Usuario.findOneAndUpdate({_id: req.body.ID_retado}, {$inc: {puntaje: 3}}, (err,usuario) => {
-					if(err) return res.json({Error: err});
-
+				Usuario.findOneAndUpdate({_id: retado}, {$inc: {puntaje: 3}}, (err,usuario) => {
 					let update3 = {
 						ID_ganador: duelo.ID_retado,ID_perdedor: duelo.ID_retador,
 						cant_correcta_retador: correctas, tiempo_retador: tiempo
 					};
 
 					ManoaMano.findOneAndUpdate({_id: duelo._id}, update3, (err,duelo) =>{
-						if(err) return res.json({Error: err});
-
-						Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc:{puntaje: -1}}, (err,usuario2) => {
-							if(err) return res.json({Error:err});
-
+						Usuario.findOneAndUpdate({_id: retador},{$inc:{puntaje: -1}}, (err,usuario2) => {
 							usuario.puntaje += 3;
 							usuario2.puntaje += -1;
 
@@ -636,30 +610,21 @@ exports.finalizarDuelo = (req,res) => {
 							index.puntosCambiados( usuario2 );
 							index.reenviar();
 						// Gano retado
-						index.mensaje( req.body.ID_retado, 'Ganaste', 'Ganaste a '+ usuario2.nombre + ' ' + usuario2.apellido, 3 );
-						index.mensaje( req.body.ID_retador, 'Perdiste', 'Perdiste contra ' + usuario.nombre + ' ' + usuario.apellido, -1 );
-
-						return res.json("GANASTE");//por tiempo
+						index.mensaje( retado, 'Ganaste', 'Ganaste a '+ usuario2.nombre + ' ' + usuario2.apellido, 3 );
+						index.mensaje( retador, 'Perdiste', 'Perdiste contra ' + usuario.nombre + ' ' + usuario.apellido, -1 );
 					});
 
 					});
 				});
 			}else if(tiempo > duelo.tiempo_retador){
 				//gano el retador
-				Usuario.findOneAndUpdate({_id: req.body.ID_retador}, {$inc: {puntaje: 3}}, (err,usuario) => {
-					if(err) return res.json({Error: err});
-
+				Usuario.findOneAndUpdate({_id: retador}, {$inc: {puntaje: 3}}, (err,usuario) => {
 					let update4 = {
 						ID_ganador: duelo.ID_retador,ID_perdedor: duelo.ID_retado
 					};
 
 					ManoaMano.findOneAndUpdate({_id: duelo._id}, update4, (err,duelo) =>{
-						if(err) return res.json({Error: err});
-
-
-						Usuario.findOneAndUpdate({_id: req.body.ID_retado},{$inc: {puntaje: -1 }}, (err,usuario2) =>{
-							if(err) return res.json({Error: err});
-
+						Usuario.findOneAndUpdate({_id: retado},{$inc: {puntaje: -1 }}, (err,usuario2) =>{
 							usuario.puntaje += 3;
 							usuario2.puntaje += -1;
 
@@ -667,29 +632,21 @@ exports.finalizarDuelo = (req,res) => {
 							index.puntosCambiados( usuario2 );
 							index.reenviar();
 							// Perdio el retado
-							index.mensaje( req.body.ID_retador, 'Ganaste', 'Ganaste por tiempo a '+ usuario2.nombre + ' ' + usuario2.apellido, 3 );
-							index.mensaje( req.body.ID_retado, 'Perdiste', 'Perdiste por tiempo contra '+ usuario.nombre + ' ' + usuario.apellido, -1 );
-
-							return res.json("PERDISTE"); //por tiempo
+							index.mensaje( retador, 'Ganaste', 'Ganaste por tiempo a '+ usuario2.nombre + ' ' + usuario2.apellido, 3 );
+							index.mensaje( retado, 'Perdiste', 'Perdiste por tiempo contra '+ usuario.nombre + ' ' + usuario.apellido, -1 );
 						});
 					});
 				});
 			}else{
 					//empataron por tiempo
-					let query2 = {ID_retador: req.body.ID_retador,ID_retado: req.body.ID_retado, ID_ganador: null};
+					let query2 = {ID_retador: retador,ID_retado: retado, ID_ganador: null};
 					
 					ManoaMano.findOneAndDelete(query2, (err,duelo) =>{
-						if(err) return res.json({Error:err});
-
-						Usuario.findOneAndUpdate({_id: req.body.ID_retador}, {$inc: {mmrestantes: 1}}, (err,usuario) => {
-							if(err) return res.json({Error:err});
-
-							Usuario.findOne({_id: req.body.ID_retado}, (err,usuario2) => {
+						Usuario.findOneAndUpdate({_id: retador}, {$inc: {mmrestantes: 1}}, (err,usuario) => {
+							Usuario.findOne({_id: retado}, (err,usuario2) => {
 								// Empataron
-								index.mensaje( req.body.ID_retador, 'Empate', 'Empataste con '+ usuario2.nombre + ' ' + usuario2.apellido);
-								index.mensaje( req.body.ID_retado, 'Empate', 'Empataste con '+  usuario.nombre + ' ' + usuario.apellido);
-
-								return res.json("EMPATE");
+								index.mensaje( retador, 'Empate', 'Empataste con '+ usuario2.nombre + ' ' + usuario2.apellido);
+								index.mensaje( retado, 'Empate', 'Empataste con '+  usuario.nombre + ' ' + usuario.apellido);
 							});
 						});
 					});
@@ -697,7 +654,16 @@ exports.finalizarDuelo = (req,res) => {
 			}
 
 		});
+}
 
+exports.finalizarDuelo = (req,res) => {
+	res.send( { ok: 'OK' } );
+	return;
+	
+	let correctas = req.body.cant_correctas;
+	let tiempo = req.body.tiempo;
+
+	finDuelo( correctas, tiempo, res.body.ID_retador, req.body.ID_retado );
 }
 
 function getHora() {

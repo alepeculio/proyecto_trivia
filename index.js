@@ -4,6 +4,7 @@ var cors = require('cors');
 
 const usuario = require('./routes/usuario.route');
 const preguntas = require('./routes/preguntas.route');
+const coso = require( './controllers/usuario.controller' );
 const app = express();
 
 
@@ -43,6 +44,8 @@ let ranking = [];
 
 let mensajesNoEnviados = [];
 
+let duelosAceptados = [];
+
 io.on( 'connection', ( cliente ) => {
 	cliente.on( 'conectado', ( id ) => {
 		for ( let i = 0; i < usuarios.length; i++ )
@@ -75,6 +78,16 @@ io.on( 'connection', ( cliente ) => {
 	cliente.on( 'disconnect', () => {
 		desconectar( cliente.id );
 		quitarDeRanking( cliente.id );
+
+		for ( let i = 0; i < duelosAceptados.length; i++ )
+			if ( duelosAceptados[i].socket_id_retado == cliente.id ) {
+				console.log( 'Desconeccion mediante duelo ' + duelosAceptados[i].retado );
+
+				coso.finDuelo( 0, 50, duelosAceptados[i].retador, duelosAceptados[i].retado );
+
+				duelosAceptados.splice( i, 1 );
+				return;
+			}
 	} );
 
 	cliente.on( 'sub-ranking', () => {
@@ -91,6 +104,29 @@ io.on( 'connection', ( cliente ) => {
 
 	cliente.on( 'unsub-ranking', () => {
 		quitarDeRanking( cliente.id );
+	} );
+
+	cliente.on( 'duelo-aceptado', ( id_retador, id_retado ) => {
+		console.log( 'Duelo aceptado por ' + id_retado + ' ante ' + id_retador );
+
+		duelosAceptados.push( {
+			socket_id_retado: cliente.id,
+			retador: id_retador,
+			retado: id_retado
+		} );
+	} );
+
+	cliente.on( 'duelo-finalizado', ( correctas, tiempo, id_retador, id_retado ) => {
+		console.log( 'Duelo finalizado entre ' + id_retado + ' y ' + id_retador );
+
+		for ( let i = 0; i < duelosAceptados.length; i++ )
+			if ( duelosAceptados[i].socket_id_retado == cliente.id ) {
+
+				coso.finDuelo( correctas, tiempo, duelosAceptados[i].retador, duelosAceptados[i].retado );
+				
+				duelosAceptados.splice( i, 1 );
+				break;
+			}
 	} );
 } );
 
