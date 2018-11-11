@@ -44,7 +44,7 @@ exports.importar = ( req, res ) => {
 				{ _id: new mongoose.Types.ObjectId(), name: "Entretenimiento"},
 				], ( err, data ) => {
 					if ( err )
-						return res.send( err );
+						return res.send( err );	
 
 					require( 'readline' ).createInterface( {
 						input: fs.createReadStream( './preguntas/preguntas.csv' )
@@ -476,8 +476,8 @@ exports.generarPreguntasDuelo = function(req, res){
 							ID_retado: req.body.ID_retado,
 							ID_ganador: null,
 							ID_perdedor: null,
-							cant_correcta_retador: "",
-							tiempo_retador: null,
+							cant_correcta_retador: 0,
+							tiempo_retador: 46,
 							fecha: fechaActual(),
 							preguntas: [preguntas[uno]._id,preguntas[dos]._id,preguntas[tres]._id]
 						});

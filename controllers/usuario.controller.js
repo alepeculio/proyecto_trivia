@@ -396,7 +396,7 @@ exports.listarRetos = (req,res) => {
 					return res.json({Mensaje: 'No hay duelos'});
 				}else{
 					for(u of usuarios){
-						usus.push(getUser(u));
+						usus.push(getUser(u));	
 					}
 				}
 				return res.json({'duelos':usus});
