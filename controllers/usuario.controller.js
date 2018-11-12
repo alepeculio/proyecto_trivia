@@ -386,20 +386,28 @@ function fechaActual() {
 }
 
 exports.cancelarReto = (req,res) => {
+	if(req.body.ID_retador == undefined || req.body.ID_retado == undefined){
+		return res.json({Error: 'Faltan parámetros'});
+	}
+
 	let query = {ID_retador: req.body.ID_retador , ID_retado: req.body.ID_retado, ID_ganador:null}; 
 	ManoaMano.findOneAndDelete(query , (err,duelo) => {
-		if(err) res.send(JSON.stringify({Error: 'No se pudo cancelar el reto'}));
+		if(err) return res.json({Error: 'No se pudo cancelar el reto'});
 
 		Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc:{mmrestantes:1}},(err,usuario) =>{
 			if(err) return res.json({Error: err});
 
-			res.send(JSON.stringify({Mensaje: 'El duelo ha sido cancelado'}));
+			return res.json({Mensaje: 'El duelo ha sido cancelado'});
 		});
 		
 	});
 }
 
 exports.listarRetos = (req,res) => {
+	if(req.query.id == undefined){
+		return res.json({Error: 'Faltan parámetros'});
+	}
+
 	ManoaMano.find({ID_retado: req.query.id, ID_ganador: null, cant_correcta_retador: {$not: {$eq: null}}})
 	.exec(function(err,duels){
 
@@ -433,12 +441,15 @@ exports.listarRetos = (req,res) => {
 	});
 }
 
-//sin uso
 exports.listarRetosPropios = (req,res) => {
+	if(req.query.id == undefined){
+		return res.json({Error: 'Faltan parámetros'});
+	}
+
 	ManoaMano.find({ID_retador: req.query.id, ID_ganador: null})
 	.exec(function(err,duels){
-		res.statusCode = 200;
-		res.setHeader('Content-Type','application/json');
+		if(err) return res.json({Error: err});
+
 		if(duels.length == 0){
 			res.write(JSON.stringify({Mensaje: 'No hay duelos'}));
 		}else{
@@ -460,7 +471,7 @@ exports.listarRetosPropios = (req,res) => {
 					}
 				}
 
-				res.json({'duelos':usus});
+				return res.json({'duelos':usus});
 			});
 		}
 	});
@@ -468,6 +479,10 @@ exports.listarRetosPropios = (req,res) => {
 
 exports.usuariosSinRetar = (req,res) => {
 	let retados = [];
+
+	if(req.query.id == undefined){
+		return res.json({Error: 'Faltan parámetros'});
+	}
 
 	ManoaMano.find({ $or: [ { ID_retador: req.query.id } , { ID_retado: req.query.id } ] , ID_ganador: null})
 	.exec(function(err,result){
@@ -527,6 +542,11 @@ exports.usuariosSinRetar = (req,res) => {
 }
 
 exports.comenzarDuelo = (req,res) => {
+
+	if(req.body.ID_retador == undefined || req.body.ID_retado == undefined || req.body.cant_correctas == undefined || req.body.tiempo == undefined){
+		return res.json({Error: 'Faltam parámetros'});
+	}
+
 	let query = {ID_retador: req.body.ID_retador,ID_retado: req.body.ID_retado, ID_ganador: null};
 
 	let update = {cant_correcta_retador: req.body.cant_correctas,tiempo_retador: req.body.tiempo};
@@ -543,6 +563,7 @@ exports.comenzarDuelo = (req,res) => {
 }
 
 exports.finDuelo = ( correctas, tiempo, retador, retado ) => {
+
 	let query = {ID_retador: retador,ID_retado: retado, ID_ganador: null};
 
 	ManoaMano.findOne(query).exec(function(err,duelo){
