@@ -461,7 +461,7 @@ exports.listarRetosPropios = (req,res) => {
 			}
 
 			Usuario.find(coso).exec(function(err, usuarios){
-				if(err) console.log(err);
+				if(err) {res.json({Error: err});console.log(err);}
 
 				let usus = [];
 
