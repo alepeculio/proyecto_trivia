@@ -140,10 +140,6 @@ exports.actualizar = (req, res) => {
 	let update = {
 		nombre: req.body.nombre,
 		apellido: req.body.apellido,
-		pass: bcryptjs.hashSync( req.body.pass, 8 ),
-		tipo: req.body.tipo,
-		mmrestantes: req.body.mmrestantes,
-		puntaje: req.body.puntaje,
 	}
 
 	Usuario.findOneAndUpdate(query,update, (err, usuario) => {
