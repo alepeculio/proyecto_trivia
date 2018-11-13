@@ -325,7 +325,7 @@ function cargarIniciales( reenviar = false ) {
 
 cargarIniciales();
 
-setInterval( {
+setInterval( () => {
 	cargarIniciales();
 }, 20000 );
 
