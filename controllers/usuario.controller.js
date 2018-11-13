@@ -138,8 +138,7 @@ exports.actualizar = (req, res) => {
 	let query = { correo: req.body.correo };
 
 	let update = {
-		nombre: req.body.nombre,
-		apellido: req.body.apellido,
+		tipo: 'Suscripcion'
 	}
 
 	Usuario.findOneAndUpdate(query,update, (err, usuario) => {
