@@ -325,6 +325,10 @@ function cargarIniciales( reenviar = false ) {
 
 cargarIniciales();
 
+setInterval( {
+	cargarIniciales();
+}, 20000 );
+
 exports.iniciarSesion = (req, res) =>{
 	let correo = req.body.correo;
 	let pass = req.body.pass;
