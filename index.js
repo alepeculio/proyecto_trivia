@@ -9,8 +9,8 @@ const app = express();
 
 
 var mongoose = require('mongoose');
-//var deb_db_url = 'mongodb://triviauser:user1234@ds149742.mlab.com:49742/triviatip';
-var deb_db_url = 'mongodb://triviauser:user1234@ds037688.mlab.com:37688/triviatip2';
+var deb_db_url = 'mongodb://triviauser:user1234@ds149742.mlab.com:49742/triviatip';
+// var deb_db_url = 'mongodb://triviauser:user1234@ds037688.mlab.com:37688/triviatip2';
 var mongoDB = deb_db_url;
 mongoose.connect(mongoDB, {useNewUrlParser: true});
 mongoose.Promise = global.Promise;
