@@ -16,7 +16,7 @@ const aumentoPorPregDiaria = 1;
 exports.exportar = ( req, res ) => {
 	Pregunta.find( {}, ( err, pregs ) => {
 		if ( err ) {
-			res.send( err );
+			res.send( 'Error' );
 		} else {
 			let csv = '';
 			
@@ -44,7 +44,7 @@ exports.importar = ( req, res ) => {
 				{ _id: new mongoose.Types.ObjectId(), name: "Entretenimiento"},
 				], ( err, data ) => {
 					if ( err )
-						return res.send( err );	
+						return res.send( 'Error' );	
 
 					require( 'readline' ).createInterface( {
 						input: fs.createReadStream( './preguntas/preguntas.csv' )
@@ -122,7 +122,7 @@ exports.preguntasDiarias = ( req, res ) => {
 			let ids = [];
 			for ( let i = 0; i < diarias.length; i++ ){
 				if ( diarias[i].ID_pregunta != null ) {
-					ids.push( diarias[i].ID_pregunta._id );	
+					ids.push( diarias[i].ID_pregunta._id );
 				}
 			}
 
@@ -259,7 +259,7 @@ exports.usuarioRespondio = ( req, res ) => {
 			mensaje: 'Correcto'
 		} );
 	}).catch (( err ) => {
-		res.send( 'Error: ' + err.message );
+		res.send( 'Error' );
 	});
 };
 exports.cambiarEstado = (req,res)=>{
@@ -272,19 +272,19 @@ exports.cambiarEstado = (req,res)=>{
 	PreguntasRespondidas.findOneAndUpdate(query,update, (err, usuario) => {
 		if(err){
 			console.log(err);
-			res.json({Error: 'No se que pinto: '+err.message});
+			res.json({Error: 'Error'});
 			return;
 		}
 
 		if ( update.estado === "Correcta" ) {
 			Usuario.update( { _id: usuario.ID_usuario }, { $inc: { puntaje: aumentoPorPregDiaria } }, ( err, usuario2 ) => {
 				if ( err )
-					res.json( { Error: 'No se que pinto: ' + err.message } );
+					res.json( { Error: 'Error' } );
 				else  {
 
 					Usuario.findOne( { _id: req.body.ID_Usuario } ).exec( ( err, usu ) => {
 						if ( err )
-							res.json( { Error: 'No se que pinto: ' + err.message } );
+							res.json( { Error: 'Error' } );
 
 						index.puntosCambiados( usu );
 						index.reenviar();
@@ -346,7 +346,7 @@ exports.pregunta_new = function(req,res){
 
 function error(res, err){
 	console.log(err.message);
-	res.json({Error: err.message});
+	res.json({Error: 'Error'});
 }
 
 exports.obtener_preguntas = (req, res) => {
@@ -366,7 +366,7 @@ exports.obtener_preguntas = (req, res) => {
 	}).limit(cantidad).exec(( err, preguntas ) => {
 		if(err){
 			console.log(err);
-			res.json({Error: 'No se pudieron listar las preguntas debido al siguiente error: '+err.message});
+			res.json({Error: 'Error'});
 			return;
 		}
 
@@ -397,7 +397,7 @@ exports.editar_pregunta = (req, res) => {
 	Pregunta.findOneAndUpdate(query,update, (err, pregunta) => {
 		if(err){
 			console.log(err);
-			res.json({Error: 'No se pudo actualizar la pregunta debido al siguiente error: '+err.message});
+			res.json({Error: 'Error'});
 			return;
 		}
 		res.json({Mensaje: 'Pregunta actualizada correctamente'});
@@ -413,14 +413,14 @@ exports.eliminar_pregunta = (req, res) => {
 	})
 	.catch(err => {
 		console.log(err);
-		res.json({Error: 'No se pudo eliminar la pregunta debido al siguiente error: '+err.message});
+		res.json({Error: 'Error'});
 	});
 }
 
 exports.generarPreguntasDuelo = function(req, res){
 
 	Usuario.findOne({_id: req.body.ID_retador}, (err,user) => {
-		if(err) return res.json({Error:err});
+		if(err) return res.json({Error:'Error'});
 
 		if(user.mmrestantes > 0){
 
@@ -435,7 +435,7 @@ exports.generarPreguntasDuelo = function(req, res){
 
 			PreguntasRespondidas.find(query).exec(function(err,respondidas){
 
-				if(err) return res.json({Error: err});
+				if(err) return res.json({Error: 'Error'});
 
 				if(respondidas.length !== 0){
 					let n = respondidas.length;
@@ -447,7 +447,7 @@ exports.generarPreguntasDuelo = function(req, res){
 				let query2 = {$or:[{ID_retador: req.body.ID_retador},{ID_retado: req.body.ID_retador},{ID_retador: req.body.ID_retado},{ID_retado: req.body.ID_retado}]};
 
 				ManoaMano.find(query2).exec(function(err,duelos){
-					if(err) return res.json({Error:err});
+					if(err) return res.json({Error:'Error'});
 
 					if(duelos.length !== 0){
 						let j = duelos.length;
@@ -462,7 +462,7 @@ exports.generarPreguntasDuelo = function(req, res){
 
 					Pregunta.find(coso).exec(function(err,preguntas){
 
-						if(err) return res.json({Error: err});
+						if(err) return res.json({Error: 'Error'});
 
 						let uno  = Math.floor( Math.random() * preguntas.length );
 
@@ -483,10 +483,10 @@ exports.generarPreguntasDuelo = function(req, res){
 						});
 
 						mano_a_mano.save( (err) => {
-							if(err) return res.json({Error: err});
+							if(err) return res.json({Error: 'Error'});
 
 							Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc: {mmrestantes: -1}}, (err,usuario) =>{
-								if(err) return res.json({Error:err});
+								if(err) return res.json({Error:'Error'});
 
 								let resultado = [];
 								resultado.push(preguntas[uno]);
@@ -515,7 +515,7 @@ exports.obtenerPreguntasDuelo = function(req,res){
 	
 
 	ManoaMano.findOne(query).exec(function(err,duelo){
-		if(err) return res.json({Error: err});
+		if(err) return res.json({Error: 'Error'});
 
 		let q = new Object();
 		q.$or = [];
@@ -524,7 +524,7 @@ exports.obtenerPreguntasDuelo = function(req,res){
 		q.$or.push({_id:duelo.preguntas[0]});
 
 		Pregunta.find(q).exec(function(err,preguntas){
-			if(err) return res.json({Error: err});
+			if(err) return res.json({Error: 'Error'});
 
 			return res.send(preguntas);
 		});

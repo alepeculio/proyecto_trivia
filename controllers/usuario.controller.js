@@ -30,7 +30,7 @@ exports.reset = ( req, res ) => {
 			tipo: 'Admin'
 		}, ( err, cantidad ) => {
 			if ( err )
-				res.send( { error: err } );
+				res.send( { error: 'Error' } );
 			else if ( cantidad <= 0 ) {
 				res.send( { error: 'no autorizado, salí de acá gil !!!' } );
 			} else {
@@ -42,7 +42,7 @@ exports.reset = ( req, res ) => {
 								mmrestantes: 3
 							}, { multi: true }, ( err, resp ) => {
 								if ( err )
-									res.send( { error: err } );
+									res.send( { error: 'Error' } );
 								else {
 									console.log( 'Datos reseteados' );
 									res.send( { mensaje: 'OK' } );
@@ -103,7 +103,7 @@ function crearUsuario(req, res, tipo, mmrestantes, puntaje){
 			})
 			.catch((err) => {
 				console.log(err);
-				res.json({Error: 'No se pudo agregar el usuario debido al siguiente error: '+err.message});
+				res.json({Error: 'Error'});
 			});
 
 		});
@@ -130,7 +130,7 @@ exports.obtener = (req, res) => { //Retorna un objeto json con los datos del usu
 			res.json(getUser(usuarios[0]));
 		}
 	}).catch((err) => {
-		res.json({Error: 'No se pudo obtener el usuario debido al siguiente error: '+err.message});
+		res.json({Error: 'Error'});
 	});
 }
 
@@ -145,7 +145,7 @@ exports.actualizar = (req, res) => {
 	Usuario.findOneAndUpdate(query,update, (err, usuario) => {
 		if(err){
 			console.log(err);
-			res.json({Error: 'No se pudo actualizar el usuario debido al siguiente error: '+err.message});
+			res.json({Error: 'Error'});
 			return;
 		}
 
@@ -169,7 +169,7 @@ exports.actualizarPass = (req, res) => {
 			Usuario.findOneAndUpdate(query,update, (err, usuario) => {
 				if(err){
 					console.log(err);
-					res.json({Error: 'No se pudo actualizar el usuario debido al siguiente error: '+err.message});
+					res.json({Error: 'Error'});
 					return;
 				}
 
@@ -199,7 +199,7 @@ exports.enviarPass = (req, res) => {
 	Usuario.findOneAndUpdate(query,update, (err, usuario) => {
 		if(err){
 			console.log(err);
-			res.json({Error: 'No se pudo actualizar la contraseña debido al siguiente error: '+err.message});
+			res.json({Error: 'Error'});
 			return;
 		}
 		res.json({Mensaje: 'Contraseña actualizado correctamente'});
@@ -242,7 +242,7 @@ exports.actualizarSuscripcion = (req, res) => {
 		res.end();
 	}).catch( err => {
 		console.log(err);
-		res.write(JSON.stringify({Error: 'No se pudo actualizar la suscripción debido al siguiente error: '+err.message}));
+		res.write(JSON.stringify({Error: 'Error'}));
 		res.end();
 	});
 
@@ -257,7 +257,7 @@ exports.eliminar = (req, res) => {
 	})
 	.catch((err) => {
 		console.log(err);
-		res.json({Error: 'No se pudo eliminar el usuario debido al siguiente error: '+err.message});
+		res.json({Error: 'Error'});
 	});
 }
 
@@ -270,7 +270,7 @@ exports.listar = (req, res) => {
 	Usuario.find({}, null, {sort:{puntaje: -1}}).limit(cantidad).exec((err, users)  => {
 		if(err){
 			console.log(err);
-			res.json({Error: 'No se pudieron listar los usuarios debido al siguiente error: '+err.message});
+			res.json({Error: 'Error'});
 		}else if(users.length == 0){
 			res.json({Mensaje: 'No hay usuarios'});
 		}else{
@@ -293,7 +293,7 @@ exports.listarRanking = (req, res) => {
 	Usuario.find({ tipo: 'Suscripcion' }, null, {sort:{puntaje: -1}}).limit(cantidad).exec((err, users)  => {
 		if(err){
 			console.log(err);
-			res.json({Error: 'No se pudieron listar los usuarios debido al siguiente error: '+err.message});
+			res.json({Error: 'Error'});
 		}else if(users.length == 0){
 			res.json({Mensaje: 'No hay usuarios'});
 		}else{
@@ -341,7 +341,7 @@ exports.iniciarSesion = (req, res) =>{
 			res.json(getUser(usuarios[0]));
 		}
 	}).catch((err) => {
-		res.json({Error: 'No se pudo obtener el usuario debido al siguiente error: '+err.message});
+		res.json({Error: 'Error'});
 	});
 }
 
@@ -395,7 +395,7 @@ exports.cancelarReto = (req,res) => {
 		if(err) return res.json({Error: 'No se pudo cancelar el reto'});
 
 		Usuario.findOneAndUpdate({_id: req.body.ID_retador},{$inc:{mmrestantes:1}},(err,usuario) =>{
-			if(err) return res.json({Error: err});
+			if(err) return res.json({Error: 'Error'});
 
 			return res.json({Mensaje: 'El duelo ha sido cancelado'});
 		});
@@ -411,7 +411,7 @@ exports.listarRetos = (req,res) => {
 	ManoaMano.find({ID_retado: req.query.id, ID_ganador: null, cant_correcta_retador: {$not: {$eq: null}}})
 	.exec(function(err,duels){
 
-		if(err) return res.json({Error: err});
+		if(err) return res.json({Error: 'Error'});
 
 		if(duels.length == 0){
 			return res.json({Mensaje: 'No hay duelos'});
@@ -423,7 +423,7 @@ exports.listarRetos = (req,res) => {
 				coso._id.$in.push(d.ID_retador);
 			}
 			Usuario.find(coso).exec(function(err, usuarios){
-				if(err) return res.json({Error: err});
+				if(err) return res.json({Error: 'Error'});
 
 				let usus = [];
 
@@ -448,7 +448,7 @@ exports.listarRetosPropios = (req,res) => {
 
 	ManoaMano.find({ID_retador: req.query.id, ID_ganador: null})
 	.exec(function(err,duels){
-		if(err) return res.json({Error: err});
+		if(err) return res.json({Error: 'Error'});
 
 		if(duels.length == 0){
 			res.write(JSON.stringify({Mensaje: 'No hay duelos'}));
@@ -461,7 +461,7 @@ exports.listarRetosPropios = (req,res) => {
 			}
 
 			Usuario.find(coso).exec(function(err, usuarios){
-				if(err) {res.json({Error: err});console.log(err);}
+				if(err) {res.json({Error: 'Error'});console.log(err);}
 
 				let usus = [];
 
@@ -487,18 +487,18 @@ exports.usuariosSinRetar = (req,res) => {
 	ManoaMano.find({ $or: [ { ID_retador: req.query.id } , { ID_retado: req.query.id } ] , ID_ganador: null})
 	.exec(function(err,result){
 
-		if(err) return res.json({Error: err});
+		if(err) return res.json({Error: 'Error'});
 
 		if(result.length == 0){
 			Usuario.find({ _id: { $not: { $eq: req.query.id } } , tipo: { $not: { $eq: "Admin" } } })
 			.exec((err, users)  => {
-				if(err) return res.json({Error: 'No se pudieron listar los usuarios debido al siguiente error: '+err.message});
+				if(err) return res.json({Error: 'Error'});
 				
 				let usuarios = [];
 				for(u of users){
 					usuarios.push(getUser(u));
 				}
-				
+
 				usuarios = shuffle( usuarios );
 				return res.json({usuarios :usuarios});
 			});
@@ -528,7 +528,7 @@ exports.usuariosSinRetar = (req,res) => {
 
 				Usuario.find(coso,null)
 				.exec(function(error, usus){ 
-					if(error) return res.json({Error:error});
+					if(error) return res.json({Error:'Error'});
 					let usuarios = [];
 
 					for(u of usus){
@@ -574,7 +574,7 @@ exports.comenzarDuelo = (req,res) => {
 
 	let update = {cant_correcta_retador: req.body.cant_correctas,tiempo_retador: req.body.tiempo};
 	ManoaMano.findOneAndUpdate(query,update, (err,duelo) => {
-		if(err) return res.json({Error: err});
+		if(err) return res.json({Error: 'Error'});
 
 		Usuario.findOne({_id: req.body.ID_retador}, (err,usuario) =>{
 
