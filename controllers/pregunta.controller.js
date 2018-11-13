@@ -263,7 +263,7 @@ exports.usuarioRespondio = ( req, res ) => {
 	});
 };
 exports.cambiarEstado = (req,res)=>{
-	let query = { ID_pregunta: req.body.ID_Pregunta , ID_usuario: req.body.ID_Usuario};
+	let query = { ID_pregunta: req.body.ID_Pregunta , ID_usuario: req.body.ID_Usuario, estado: 'NoRespondio' };
 
 	let update = {
 		estado: req.body.estado,
