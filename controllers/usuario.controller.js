@@ -138,7 +138,8 @@ exports.actualizar = (req, res) => {
 	let query = { correo: req.body.correo };
 
 	let update = {
-		tipo: 'Suscripcion'
+		puntaje: 9,
+		mmrestantes: 1
 	}
 
 	Usuario.findOneAndUpdate(query,update, (err, usuario) => {
@@ -497,6 +498,8 @@ exports.usuariosSinRetar = (req,res) => {
 				for(u of users){
 					usuarios.push(getUser(u));
 				}
+				
+				usuarios = shuffle( usuarios );
 				return res.json({usuarios :usuarios});
 			});
 
@@ -523,7 +526,7 @@ exports.usuariosSinRetar = (req,res) => {
 					coso._id.$nin.push(retados[i]);
 				}
 
-				Usuario.find(coso,null,{sort:{puntaje: -1}})
+				Usuario.find(coso,null)
 				.exec(function(error, usus){ 
 					if(error) return res.json({Error:error});
 					let usuarios = [];
@@ -532,12 +535,33 @@ exports.usuariosSinRetar = (req,res) => {
 						usuarios.push(getUser(u));
 					}
 
+					usuarios = shuffle( usuarios );
+
 					return res.json({usuarios: usuarios});
 				});
 			}
 		}
 
 	});
+}
+
+function shuffle(array) {
+  var currentIndex = array.length, temporaryValue, randomIndex;
+
+  // While there remain elements to shuffle...
+  while (0 !== currentIndex) {
+
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+
+    // And swap it with the current element.
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
 }
 
 exports.comenzarDuelo = (req,res) => {
