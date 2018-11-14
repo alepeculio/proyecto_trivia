@@ -36,5 +36,7 @@ router.get( '/hora', usuario_controller.hora );
 
 router.post( '/reset', usuario_controller.reset );
 
+router.get( '/redimensionar', usuario_controller.redimensionarImagen );
+
 
 module.exports = router;
