@@ -174,7 +174,7 @@ exports.preguntasDiarias = ( req, res ) => {
 
 exports.generarPreguntaDiaria = ( req, res ) => {
 	index.escribirLog( 'pregunta.generarPreguntaDiaria', 'ID_Usuario: ' + req.body.ID_Usuario + ', categoria: ' + req.body.categoria + ', position: ' + req.body.posicion );
-	
+		
 	let id_usu = req.body.ID_Usuario;
 	let cat = req.body.categoria;
 	let position = req.body.posicion;
@@ -221,6 +221,20 @@ exports.generarPreguntaDiaria = ( req, res ) => {
 										break;
 									}
 
+									let query = {$or:[{ID_retador: req.body.ID_retador},{ID_retado: req.body.ID_retador},{ID_retador: req.body.ID_retado},{ID_retado: req.body.ID_retado}]};
+
+									ManoaMano.find(query , (err,duelos) => {
+										if(err) return res.json({Error:err});
+										console.log(duelos.length);
+										for(let i = pregs.length - 1; i >= 0; i--)
+											for(let j = duelos.length - 1; j >=0; j--)
+												if(pregs[i]._id.equals(duelos[j].preguntas[0]) || pregs[i]._id.equals(duelos[j].preguntas[1]) || pregs[i]._id.equals(duelos[j].preguntas[2])){
+													pregs.splice(i, 1);
+													continue;
+												}
+
+												
+												
 							// Seleccionar una posicion aleatoria
 							let p = Math.floor( Math.random() * pregs.length );
 
@@ -240,7 +254,9 @@ exports.generarPreguntaDiaria = ( req, res ) => {
 									res.send( pregs[p] );
 								}
 							} );
-						}
+
+							});
+						}					
 					} );
 				}
 			} );
