@@ -11,10 +11,10 @@ const PreguntasRespondidas = require( '../models/preguntas_respondidas.model.js'
 const PreguntasDiarias = require( '../models/preguntas_diarias.model.js' );
 
 exports.logs = ( req, res ) => {
-	if ( fs.existsSync( path.resolve( __dirname + '\\..\\logs.txt' ) ) )
-		res.sendFile( path.resolve( __dirname + '\\..\\logs.txt' ) );
+	if ( fs.existsSync( path.resolve( __dirname + '/../logs.txt' ) ) )
+		res.sendFile( path.resolve( __dirname + '/../logs.txt' ) );
 	else
-		res.send( 'No hay logs en ' + path.resolve( __dirname + '\\..\\logs.txt' ) );
+		res.send( 'No hay logs en ' + path.resolve( __dirname + '/../logs.txt' ) );
 }
 
 /*[Ale] ============================================================================================*/
