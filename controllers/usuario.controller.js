@@ -734,3 +734,36 @@ exports.hora = ( req, res ) => {
 		fecha: fechaActual()
 	} );
 }
+
+const sharp = require('sharp');
+exports.redimensionarImagen = (req, res ) => {
+	Usuario.find({}, (error, usuarios) => {
+		if(error){
+			res.json({Error:'Algo fallo'});
+		}else{
+			if(usuarios.length == 0){
+				res.json({Mensaje: 'No hay usuarios'});
+			}else{
+				for(let i = 0; i < usuarios.length; i++){
+					sharp(usuarios[i].img.data)
+					.resize(200)
+					.toBuffer()
+					.then( data => {
+						Usuario.findOneAndUpdate( { correo: usuarios[i].correo } ,{img: {data: data} }, (err, usuario) => {
+							if(err)
+								console.log({Error: err});
+							else{
+								console.log({Actualizado: usuario});
+							}
+						} );
+						if(i == usuarios.length - 1)
+							res.json( {Mensaje: 'Imagenes redimensionadas.'});
+					})
+					.catch( err => {
+						console.log(err);
+					} );		
+				}
+			}
+		}
+	});
+}
