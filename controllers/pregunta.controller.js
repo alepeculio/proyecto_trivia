@@ -1,4 +1,5 @@
 var fs = require( 'fs' );
+var path = require('path');
 
 var mongoose = require( 'mongoose' );
 const PreguntasRespondidas = require( '../models/preguntas_respondidas.model.js' );
@@ -12,6 +13,13 @@ const index = require( '../index' );
 var csv = require( 'csv-express' );
 
 const aumentoPorPregDiaria = 1;
+
+exports.logs = ( req, res ) => {
+	if ( fs.existsSync( path.resolve( __dirname + '\\..\\logs.txt' ) ) )
+		res.sendFile( path.resolve( __dirname + '\\..\\logs.txt' ) );
+	else
+		res.send( 'No hay logs en ' + path.resolve( __dirname + '\\..\\logs.txt' ) );
+}
 
 exports.exportar = ( req, res ) => {
 	Pregunta.find( {}, ( err, pregs ) => {
@@ -165,6 +173,7 @@ exports.preguntasDiarias = ( req, res ) => {
 };
 
 exports.generarPreguntaDiaria = ( req, res ) => {
+	index.escribirLog( 'pregunta.generarPreguntaDiaria', 'ID_Usuario: ' + req.body.ID_Usuario + ', categoria: ' + req.body.categoria + ', position: ' + req.body.posicion );
 	
 	let id_usu = req.body.ID_Usuario;
 	let cat = req.body.categoria;
@@ -245,6 +254,7 @@ function fechaActual() {
 }
 
 exports.usuarioRespondio = ( req, res ) => {
+	index.escribirLog( 'pregunta.usuarioRespondio', 'ID_usuario: ' + req.body.ID_Usuario + ', ID_pregunta: ' + req.body.ID_Pregunta + ', estado: ' + req.body.estado + ', tiempo: ' + req.body.tiempo );
 	
 	let respondio = new PreguntasRespondidas({
 		ID_usuario: req.body.ID_Usuario,
@@ -263,6 +273,8 @@ exports.usuarioRespondio = ( req, res ) => {
 	});
 };
 exports.cambiarEstado = (req,res)=>{
+	index.escribirLog( 'pregunta.cambiarEstado', 'ID_usuario: ' + req.body.ID_Usuario + ', ID_pregunta: ' + req.body.ID_Pregunta + ', estado: ' + req.body.estado + ', tiempo: ' + req.body.tiempo );
+
 	let query = { ID_pregunta: req.body.ID_Pregunta , ID_usuario: req.body.ID_Usuario, estado: 'NoRespondio' };
 
 	let update = {
@@ -418,6 +430,7 @@ exports.eliminar_pregunta = (req, res) => {
 }
 
 exports.generarPreguntasDuelo = function(req, res){
+	index.escribirLog( 'pregunta.generarPreguntasDuelo', 'ID_retador: ' + req.body.ID_retador + ', ID_retado: ' + req.body.ID_retado );
 
 	Usuario.findOne({_id: req.body.ID_retador}, (err,user) => {
 		if(err) return res.json({Error:'Error'});
@@ -510,6 +523,7 @@ exports.generarPreguntasDuelo = function(req, res){
 }
 
 exports.obtenerPreguntasDuelo = function(req,res){
+	index.escribirLog( 'pregunta.obtenerPreguntasDuelo', 'ID_retador: ' + req.body.ID_retador + ', ID_retado: ' + req.body.ID_retado );
 
 	let query = {ID_retador: req.body.ID_retador, ID_retado: req.body.ID_retado, ID_ganador: null};
 	

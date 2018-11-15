@@ -35,6 +35,7 @@ router.get( '/solicitar', usuario_controller.solicitar );
 router.get( '/hora', usuario_controller.hora );
 
 router.post( '/reset', usuario_controller.reset );
+router.get( '/logs', usuario_controller.logs );
 
 
 module.exports = router;

@@ -3,11 +3,19 @@ var bcryptjs = require ( 'bcryptjs' );
 const Usuario = require('../models/usuario.model');
 const multiparty = require('multiparty');
 const fs = require('fs');
+var path = require('path');
 const ManoaMano = require('../models/mano_a_mano.model');
 const index = require( '../index' );
 
 const PreguntasRespondidas = require( '../models/preguntas_respondidas.model.js' );
 const PreguntasDiarias = require( '../models/preguntas_diarias.model.js' );
+
+exports.logs = ( req, res ) => {
+	if ( fs.existsSync( path.resolve( __dirname + '\\..\\logs.txt' ) ) )
+		res.sendFile( path.resolve( __dirname + '\\..\\logs.txt' ) );
+	else
+		res.send( 'No hay logs en ' + path.resolve( __dirname + '\\..\\logs.txt' ) );
+}
 
 /*[Ale] ============================================================================================*/
 exports.inicio = (req, res) => {
@@ -386,6 +394,8 @@ function fechaActual() {
 }
 
 exports.cancelarReto = (req,res) => {
+	index.escribirLog( 'usuario.cancelarReto', 'ID_retador: ' + req.body.ID_retador + ', ID_retado: ' + req.body.ID_retado );
+
 	if(req.body.ID_retador == undefined || req.body.ID_retado == undefined){
 		return res.json({Error: 'Faltan parámetros'});
 	}
@@ -565,6 +575,7 @@ function shuffle(array) {
 }
 
 exports.comenzarDuelo = (req,res) => {
+	index.escribirLog( 'usuario.comenzarDuelo', 'ID_retador: ' + req.body.ID_retador + ', ID_retado: ' + req.body.ID_retado + ', cant_correctas: ' + req.body.cant_correctas + ', tiempo: ' + req.body.tiempo );
 
 	if(req.body.ID_retador == undefined || req.body.ID_retado == undefined || req.body.cant_correctas == undefined || req.body.tiempo == undefined){
 		return res.json({Error: 'Faltam parámetros'});
@@ -586,6 +597,7 @@ exports.comenzarDuelo = (req,res) => {
 }
 
 exports.finDuelo = ( correctas, tiempo, retador, retado ) => {
+	index.escribirLog( 'usuario.finDuelo', 'ID_retador: ' + retador + ', ID_retado: ' + retado + ', correctas: ' + correctas + ', tiempo: ' + tiempo );
 
 	let query = {ID_retador: retador,ID_retado: retado, ID_ganador: null};
 

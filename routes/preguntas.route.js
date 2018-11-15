@@ -21,4 +21,6 @@ router.get('/temp', pregunta_controller.temp);
 router.post('/generarPreguntasDuelo', pregunta_controller.generarPreguntasDuelo);
 router.post('/obtenerPreguntasDuelo', pregunta_controller.obtenerPreguntasDuelo);
 
+router.get('/logs', pregunta_controller.logs);
+
 module.exports = router;

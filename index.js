@@ -254,3 +254,25 @@ function reenviar( reenviarSioSi = false ) {
 }
 
 exports.reenviar = reenviar;
+
+const fs = require( 'fs' );
+
+exports.escribirLog = ( func, msj ) => {
+	let hora = new Date();
+	hora.setTime( new Date().getTime() - 10800000 );
+
+	let time = hora.getUTCHours() + ':' + hora.getUTCMinutes() + ':' + hora.getUTCSeconds();
+
+	let log = time.toString() + ' | ' + func + ' | ' + msj + '\n';
+
+	fs.appendFile( 'logs.txt', log, ( err ) => {
+		if ( err )
+			console.log( 'Error al escribir en el log: ' + log );
+	} );
+}
+
+function getHora() {
+	let hora = new Date();
+	hora.setTime( new Date().getTime() - 10800000 );
+	return hora;
+}
