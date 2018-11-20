@@ -12,7 +12,7 @@ const PreguntasRespondidas = require( '../models/preguntas_respondidas.model.js'
 const PreguntasDiarias = require( '../models/preguntas_diarias.model.js' );
 
 exports.logs = ( req, res ) => {
-	Ganadores.remove( {}, ( err, gan ) => {
+	/*Ganadores.remove( {}, ( err, gan ) => {
 		Usuario.find( { tipo: 'Suscripcion' }, null, { sort: { puntaje: -1 } } ).limit( 3 ).exec( ( err, usuarios ) => {
 			new Ganadores( {
 				_id: mongoose.Types.ObjectId(),
@@ -20,7 +20,7 @@ exports.logs = ( req, res ) => {
 				nombre: usuarios[0].nombre,
 				apellido: usuarios[0].apellido,
 				img: usuarios[0].img,
-				puntos: usuarios[0].puntaje
+				puntaje: usuarios[0].puntaje
 			} ).save( ( err, g1 ) => {
 				new Ganadores( {
 					_id: mongoose.Types.ObjectId(),
@@ -28,7 +28,7 @@ exports.logs = ( req, res ) => {
 					nombre: usuarios[1].nombre,
 					apellido: usuarios[1].apellido,
 					img: usuarios[1].img,
-					puntos: usuarios[1].puntaje
+					puntaje: usuarios[1].puntaje
 				} ).save( ( err, g1 ) => {
 					new Ganadores( {
 						_id: mongoose.Types.ObjectId(),
@@ -36,17 +36,15 @@ exports.logs = ( req, res ) => {
 						nombre: usuarios[2].nombre,
 						apellido: usuarios[2].apellido,
 						img: usuarios[2].img,
-						puntos: usuarios[2].puntaje
+						puntaje: usuarios[2].puntaje
 					} ).save( ( err, g1 ) => {
-						Ganadores.find( {}, ( err, ganadores ) => {
-							res.json( ganadores );
-						} );
+						res.send( { mensaje: 'OK' } );
 					} );
 				} );
 			} );
 		} );
 	} );
-	return;
+	return;*/
 	if ( fs.existsSync( path.resolve( __dirname + '/../logs.txt' ) ) )
 		res.sendFile( path.resolve( __dirname + '/../logs.txt' ) );
 	else
@@ -54,7 +52,17 @@ exports.logs = ( req, res ) => {
 }
 
 exports.ganadores = ( req, res ) => {
-	Ganadores.find( {}, null, { sort: { puntaje: -1 } } ).exec( ( err, ganadores ) => {
+	Ganadores.find( {}, null, { sort: { puntaje: -1 } } ).exec( ( err, g ) => {
+		let ganadores = [];
+
+		for ( let i = 0; i < g.length; i++ )
+			ganadores.push( {
+				nombre: g[i].nombre,
+				apellido: g[i].apellido,
+				puntaje: g[i].puntaje,
+				img: ( ( g[i].img.data != undefined ) ? 'data:image/jpeg;base64,' + g[i].img.data.toString( 'base64' ) : '' )
+			} );
+
 		res.json( ganadores );
 	} );
 }
@@ -94,24 +102,24 @@ exports.reset = ( req, res ) => {
 										ID_usuario: usuarios[0]._id,
 										nombre: usuarios[0].nombre,
 										apellido: usuarios[0].apellido,
-										img: usuarios[0].img,
-										puntos: usuarios[0].puntaje
+										img: ( ( usuarios[0].img.data != undefined ) ? 'data:image/jpeg;base64,' + usuarios[0].img.data.toString( 'base64' ) : '' ),
+										puntaje: usuarios[0].puntaje
 									} ).save( ( err, g1 ) => {
 										new Ganadores( {
 											_id: mongoose.Types.ObjectId(),
 											ID_usuario: usuarios[1]._id,
 											nombre: usuarios[1].nombre,
 											apellido: usuarios[1].apellido,
-											img: usuarios[1].img,
-											puntos: usuarios[1].puntaje
+											img: ( ( usuarios[1].img.data != undefined ) ? 'data:image/jpeg;base64,' + usuarios[1].img.data.toString( 'base64' ) : '' ),
+											puntaje: usuarios[1].puntaje
 										} ).save( ( err, g1 ) => {
 											new Ganadores( {
 												_id: mongoose.Types.ObjectId(),
 												ID_usuario: usuarios[2]._id,
 												nombre: usuarios[2].nombre,
 												apellido: usuarios[2].apellido,
-												img: usuarios[2].img,
-												puntos: usuarios[2].puntaje
+												img: ( ( usuarios[2].img.data != undefined ) ? 'data:image/jpeg;base64,' + usuarios[2].img.data.toString( 'base64' ) : '' ),
+												puntaje: usuarios[2].puntaje
 											} ).save( ( err, g1 ) => {
 												Usuario.update( { tipo: { $in: [ 'Suscripcion', 'SinSuscripcion' ] } }, {
 													puntaje: 0,

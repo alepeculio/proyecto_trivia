@@ -10,7 +10,7 @@ var GanadoresSchema = new Schema( {
 	nombre:{type: String,required: true,max: 200, trim:true},
 	apellido:{type: String,required: true,max: 200, trim:true},
 	img: { data: Buffer, contentType: String},
-	puntos: {
+	puntaje: {
 		type: Number,
 		required: true
 	}
