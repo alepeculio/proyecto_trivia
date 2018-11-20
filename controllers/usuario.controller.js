@@ -5,16 +5,58 @@ const multiparty = require('multiparty');
 const fs = require('fs');
 var path = require('path');
 const ManoaMano = require('../models/mano_a_mano.model');
+const Ganadores = require('../models/ganadores.model');
 const index = require( '../index' );
 
 const PreguntasRespondidas = require( '../models/preguntas_respondidas.model.js' );
 const PreguntasDiarias = require( '../models/preguntas_diarias.model.js' );
 
 exports.logs = ( req, res ) => {
+	Ganadores.remove( {}, ( err, gan ) => {
+		Usuario.find( { tipo: 'Suscripcion' }, null, { sort: { puntaje: -1 } } ).limit( 3 ).exec( ( err, usuarios ) => {
+			new Ganadores( {
+				_id: mongoose.Types.ObjectId(),
+				ID_usuario: usuarios[0]._id,
+				nombre: usuarios[0].nombre,
+				apellido: usuarios[0].apellido,
+				img: usuarios[0].img,
+				puntos: usuarios[0].puntaje
+			} ).save( ( err, g1 ) => {
+				new Ganadores( {
+					_id: mongoose.Types.ObjectId(),
+					ID_usuario: usuarios[1]._id,
+					nombre: usuarios[1].nombre,
+					apellido: usuarios[1].apellido,
+					img: usuarios[1].img,
+					puntos: usuarios[1].puntaje
+				} ).save( ( err, g1 ) => {
+					new Ganadores( {
+						_id: mongoose.Types.ObjectId(),
+						ID_usuario: usuarios[2]._id,
+						nombre: usuarios[2].nombre,
+						apellido: usuarios[2].apellido,
+						img: usuarios[2].img,
+						puntos: usuarios[2].puntaje
+					} ).save( ( err, g1 ) => {
+						Ganadores.find( {}, ( err, ganadores ) => {
+							res.json( ganadores );
+						} );
+					} );
+				} );
+			} );
+		} );
+	} );
+	return;
 	if ( fs.existsSync( path.resolve( __dirname + '/../logs.txt' ) ) )
 		res.sendFile( path.resolve( __dirname + '/../logs.txt' ) );
 	else
 		res.send( 'No hay logs en ' + path.resolve( __dirname + '/../logs.txt' ) );
+}
+
+exports.ganadores = ( req, res ) => {
+	Ganadores.find( {}, null, { sort: { puntaje: -1 } } ).exec( ( err, ganadores ) => {
+		res.json( ganadores );
+	} );
 }
 
 /*[Ale] ============================================================================================*/
@@ -45,16 +87,47 @@ exports.reset = ( req, res ) => {
 				PreguntasRespondidas.remove( {}, ( err, pr ) => {
 					PreguntasDiarias.remove( {}, ( err, pd ) => {
 						ManoaMano.remove( {}, ( err, mam ) => {
-							Usuario.update( { tipo: { $in: [ 'Suscripcion', 'SinSuscripcion' ] } }, {
-								puntaje: 0,
-								mmrestantes: 3
-							}, { multi: true }, ( err, resp ) => {
-								if ( err )
-									res.send( { error: 'Error' } );
-								else {
-									console.log( 'Datos reseteados' );
-									res.send( { mensaje: 'OK' } );
-								}
+							Ganadores.remove( {}, ( err, gan ) => {
+								Usuario.find( { tipo: 'Suscripcion' }, null, { sort: { puntaje: -1 } } ).limit( 3 ).exec( ( err, usuarios ) => {
+									new Ganadores( {
+										_id: mongoose.Types.ObjectId(),
+										ID_usuario: usuarios[0]._id,
+										nombre: usuarios[0].nombre,
+										apellido: usuarios[0].apellido,
+										img: usuarios[0].img,
+										puntos: usuarios[0].puntaje
+									} ).save( ( err, g1 ) => {
+										new Ganadores( {
+											_id: mongoose.Types.ObjectId(),
+											ID_usuario: usuarios[1]._id,
+											nombre: usuarios[1].nombre,
+											apellido: usuarios[1].apellido,
+											img: usuarios[1].img,
+											puntos: usuarios[1].puntaje
+										} ).save( ( err, g1 ) => {
+											new Ganadores( {
+												_id: mongoose.Types.ObjectId(),
+												ID_usuario: usuarios[2]._id,
+												nombre: usuarios[2].nombre,
+												apellido: usuarios[2].apellido,
+												img: usuarios[2].img,
+												puntos: usuarios[2].puntaje
+											} ).save( ( err, g1 ) => {
+												Usuario.update( { tipo: { $in: [ 'Suscripcion', 'SinSuscripcion' ] } }, {
+													puntaje: 0,
+													mmrestantes: 3
+												}, { multi: true }, ( err, resp ) => {
+													if ( err )
+														res.send( { error: 'Error' } );
+													else {
+														console.log( 'Datos reseteados' );
+														res.send( { mensaje: 'OK' } );
+													}
+												} );
+											} );
+										} );
+									} );
+								} );
 							} );
 						} );
 					} );

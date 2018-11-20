@@ -38,6 +38,7 @@ router.post( '/reset', usuario_controller.reset );
 router.get( '/logs', usuario_controller.logs );
 
 router.get( '/redimensionar', usuario_controller.redimensionarImagen );
+router.get( '/ganadores', usuario_controller.ganadores );
 
 
 module.exports = router;
