@@ -102,7 +102,7 @@ exports.reset = ( req, res ) => {
 										ID_usuario: usuarios[0]._id,
 										nombre: usuarios[0].nombre,
 										apellido: usuarios[0].apellido,
-										img: ( ( usuarios[0].img.data != undefined ) ? 'data:image/jpeg;base64,' + usuarios[0].img.data.toString( 'base64' ) : '' ),
+										img: usuarios[0].img,
 										puntaje: usuarios[0].puntaje
 									} ).save( ( err, g1 ) => {
 										new Ganadores( {
@@ -110,7 +110,7 @@ exports.reset = ( req, res ) => {
 											ID_usuario: usuarios[1]._id,
 											nombre: usuarios[1].nombre,
 											apellido: usuarios[1].apellido,
-											img: ( ( usuarios[1].img.data != undefined ) ? 'data:image/jpeg;base64,' + usuarios[1].img.data.toString( 'base64' ) : '' ),
+											img: usuarios[1].img,
 											puntaje: usuarios[1].puntaje
 										} ).save( ( err, g1 ) => {
 											new Ganadores( {
@@ -118,7 +118,7 @@ exports.reset = ( req, res ) => {
 												ID_usuario: usuarios[2]._id,
 												nombre: usuarios[2].nombre,
 												apellido: usuarios[2].apellido,
-												img: ( ( usuarios[2].img.data != undefined ) ? 'data:image/jpeg;base64,' + usuarios[2].img.data.toString( 'base64' ) : '' ),
+												img: usuarios[2].img,
 												puntaje: usuarios[2].puntaje
 											} ).save( ( err, g1 ) => {
 												Usuario.update( { tipo: { $in: [ 'Suscripcion', 'SinSuscripcion' ] } }, {
