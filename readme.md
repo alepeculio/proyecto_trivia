@@ -1,3 +1,20 @@
+# Trivia TIP
+**Servidor Nodejs y con la bd MongoDB**
+
+El contenido de este repositorio es un servidor realizado con herramientas del entorno de programación Nodejs, con una base de datos en MongoDB
+
+
+
+
+
+
+
+
+
+
+
+
+
 git pull //Obtener los datos actuales										sino anda //git pull origin master
 git status // Obtener el estado actual del repositorio local
 git add -A //Agregar todos los archivos modificados al commit
